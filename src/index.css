@@ -1,21 +1,36 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
   width: 100%;
 }
 
 /* fundo */
 .immersia-bg {
-  background:
-    radial-gradient(900px 520px at 20% 0%, rgba(42, 198, 255, 0.20), transparent 55%),
-    radial-gradient(760px 520px at 85% 18%, rgba(217, 70, 239, 0.22), transparent 58%),
-    radial-gradient(900px 520px at 60% 100%, rgba(124, 58, 237, 0.28), transparent 60%),
-    linear-gradient(180deg, #070615 0%, #0A0820 45%, #070615 100%);
+  background: radial-gradient(
+      900px 520px at 20% 0%,
+      rgba(42, 198, 255, 0.2),
+      transparent 55%
+    ),
+    radial-gradient(
+      760px 520px at 85% 18%,
+      rgba(217, 70, 239, 0.22),
+      transparent 58%
+    ),
+    radial-gradient(
+      900px 520px at 60% 100%,
+      rgba(124, 58, 237, 0.28),
+      transparent 60%
+    ),
+    linear-gradient(180deg, #070615 0%, #0a0820 45%, #070615 100%);
 }
 
 /* acessibilidade */
-:focus-visible {
+a:focus-visible,
+button:focus-visible,
+[role='button']:focus-visible {
   outline: 2px solid rgba(42, 198, 255, 0.8);
   outline-offset: 3px;
 }
@@ -37,4 +52,110 @@ body {
   .primary-btn {
     @apply w-full rounded-full bg-violet-600 py-3 text-sm font-semibold text-white transition hover:bg-violet-500 active:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-60;
   }
+}
+
+@layer components {
+  .topbar {
+    @apply sticky top-0 z-40 w-full border-b border-white/10 bg-black/25 backdrop-blur-xl;
+  }
+
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-6;
+  }
+
+  .glass-surface {
+    @apply rounded-3xl border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_20px_70px_rgba(0,0,0,0.55)];
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-white/80;
+  }
+
+  .chip-success {
+    @apply border-emerald-300/20 bg-emerald-400/10 text-emerald-200;
+  }
+
+  .chip-muted {
+    @apply border-white/10 bg-white/5 text-white/65;
+  }
+
+  /* ✅ aqui: SEM glass-surface */
+  .card-training {
+    @apply overflow-hidden rounded-3xl border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_20px_70px_rgba(0,0,0,0.55)] transition hover:bg-white/7 hover:border-white/25;
+  }
+}
+
+@layer components {
+  .chip-overlay {
+    @apply inline-flex items-center gap-2 rounded-full
+    bg-black/60 backdrop-blur-md
+    px-3 py-1
+    text-xs font-medium text-white
+    ring-1 ring-white/20;
+  }
+
+  .chip-overlay-success {
+    @apply bg-emerald-600/80 text-white ring-emerald-300/40;
+  }
+
+  .chip-overlay-muted {
+    @apply bg-black/60 text-white/80 ring-white/20;
+  }
+}
+
+/* =========================
+   Scrollbar (Immersia)
+   ========================= */
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 58, 237, 0.9) rgba(255, 255, 255, 0.08);
+}
+
+/* Chrome/Edge/Safari */
+*::-webkit-scrollbar {
+  width: 12px; /* vertical */
+  height: 12px; /* horizontal */
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    rgba(42, 198, 255, 0.95),
+    rgba(124, 58, 237, 0.95)
+  );
+  border: 3px solid rgba(0, 0, 0, 0.35); /* dá o efeito “pílula” */
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(42, 198, 255, 1),
+    rgba(168, 85, 247, 1)
+  );
+}
+
+*::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(
+    180deg,
+    rgba(34, 211, 238, 1),
+    rgba(147, 51, 234, 1)
+  );
+}
+
+/* canto (quando tem scroll horizontal + vertical) */
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
 }
