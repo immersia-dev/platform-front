@@ -1,8 +1,40 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-/* Base global – não estilizar nada ainda */
 html, body, #root {
   height: 100%;
+  width: 100%;
+}
+
+/* fundo */
+.immersia-bg {
+  background:
+    radial-gradient(900px 520px at 20% 0%, rgba(42, 198, 255, 0.20), transparent 55%),
+    radial-gradient(760px 520px at 85% 18%, rgba(217, 70, 239, 0.22), transparent 58%),
+    radial-gradient(900px 520px at 60% 100%, rgba(124, 58, 237, 0.28), transparent 60%),
+    linear-gradient(180deg, #070615 0%, #0A0820 45%, #070615 100%);
+}
+
+/* acessibilidade */
+:focus-visible {
+  outline: 2px solid rgba(42, 198, 255, 0.8);
+  outline-offset: 3px;
+}
+
+/* Evita “estouro” horizontal por blur/gradientes */
+body {
+  overflow-x: hidden;
+}
+
+@layer components {
+  .glass-card {
+    @apply w-full max-w-[520px] rounded-3xl border border-white/15 bg-black/40 p-10 backdrop-blur-2xl shadow-[0_30px_90px_rgba(0,0,0,0.65)];
+  }
+
+  .pill-input {
+    @apply w-full rounded-full border border-white/20 bg-white/10 py-3 pl-11 pr-4 text-sm text-white placeholder:text-white/50 outline-none transition focus:border-violet-400 focus:bg-white/15;
+  }
+
+  .primary-btn {
+    @apply w-full rounded-full bg-violet-600 py-3 text-sm font-semibold text-white transition hover:bg-violet-500 active:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-60;
+  }
 }
