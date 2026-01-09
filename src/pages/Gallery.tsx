@@ -45,7 +45,7 @@ const modulesMock: Module[] = [
         minutes: 30,
         completed: true,
         modality: 'VR',
-        url: 'https://example.com/treinamento', // TODO: trocar pelo link real
+        url: 'https://immersia-plataform-firefighting-01.netlify.app/', // TODO: trocar pelo link real
         enabled: true, // ✅ único acessível
         imageUrl: fire_extinguisher,
       },
