@@ -1,6 +1,11 @@
 import { useId, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Lock } from 'lucide-react';
+import {
+  isValidMockPassword,
+  MOCK_PASSWORD,
+  resolveRoleByLogin,
+} from '../mocks/auth';
 
 import logoUrl from '../assets/Immersia_logo-removebg.png';
 
@@ -28,11 +33,13 @@ export default function Login() {
 
   const passwordError = useMemo(() => {
     if (!touched.password) return '';
-    if (password.trim().length < 6) return 'Senha inválida.';
+    if (!isValidMockPassword(password)) {
+      return `Senha inválida. Use ${MOCK_PASSWORD}.`;
+    }
     return '';
   }, [password, touched.password]);
 
-  const canSubmit = login.trim().length > 0 && password.trim().length >= 6;
+  const canSubmit = login.trim().length > 0 && isValidMockPassword(password);
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -41,7 +48,13 @@ export default function Login() {
 
     if (!canSubmit) return;
 
-    // sem integração por enquanto
+    const role = resolveRoleByLogin(login);
+
+    if (role === 'instructor') {
+      navigate('/instructor');
+      return;
+    }
+
     navigate('/gallery');
   }
 
@@ -123,7 +136,7 @@ export default function Login() {
                     name="password"
                     type="password"
                     autoComplete="current-password"
-                    minLength={6}
+                    minLength={9}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
