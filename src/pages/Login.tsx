@@ -41,6 +41,15 @@ export default function Login() {
 
   const canSubmit = login.trim().length > 0 && isValidMockPassword(password);
 
+  function quickLogin(role: 'student' | 'instructor') {
+    if (role === 'instructor') {
+      navigate('/instructor');
+      return;
+    }
+
+    navigate('/gallery');
+  }
+
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
 
@@ -193,6 +202,24 @@ export default function Login() {
               >
                 Entrar
               </button>
+
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => quickLogin('student')}
+                  className="w-full rounded-full border border-emerald-300/30 bg-emerald-500/20 py-3 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-500/30 active:translate-y-[1px]"
+                >
+                  Eu sou aluno(a)
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => quickLogin('instructor')}
+                  className="w-full rounded-full border border-cyan-300/30 bg-cyan-500/20 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-500/30 active:translate-y-[1px]"
+                >
+                  Eu sou instrutor(a)
+                </button>
+              </div>
             </form>
           </section>
         </div>
