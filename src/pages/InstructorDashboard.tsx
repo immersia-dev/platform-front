@@ -94,7 +94,7 @@ function KpiCard({
   accent?: string;
 }) {
   return (
-    <div className="glass-surface flex items-center gap-5 p-6">
+    <div className="glass-surface flex items-center gap-5 p-6" enable-xr>
       <div
         className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl"
         style={{ backgroundColor: `${accent}20` }}
@@ -231,7 +231,7 @@ export default function InstructorDashboard() {
   return (
     <main className="immersia-bg min-h-screen text-white antialiased">
       {/* ── Topbar ─────────────────────────────────────── */}
-      <header className="topbar">
+      <header className="topbar" enable-xr>
         <div className="container-page flex h-16 items-center justify-between">
           <div className="flex items-center gap-4">
             <BarChart3 className="h-5 w-5 text-violet-400" />
@@ -294,7 +294,7 @@ export default function InstructorDashboard() {
         {/* ── Linha 1: Bar + Line ─────────────────────── */}
         <div className="mt-10 grid gap-6 lg:grid-cols-2">
           {/* Nota média por aluno */}
-          <div className="glass-surface p-6">
+          <div className="glass-surface p-6" enable-xr>
             <div className="mb-4 flex items-center gap-2">
               <Target className="h-4 w-4 text-violet-400" />
               <h2 className="text-sm font-semibold">Nota Média por Aluno</h2>
@@ -330,7 +330,7 @@ export default function InstructorDashboard() {
           </div>
 
           {/* Sessões por dia */}
-          <div className="glass-surface p-6">
+          <div className="glass-surface p-6" enable-xr>
             <div className="mb-4 flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-cyan-400" />
               <h2 className="text-sm font-semibold">Sessões por Dia</h2>
@@ -367,7 +367,7 @@ export default function InstructorDashboard() {
         {/* ── Linha 2: Pie status + Pie módulos + Radar ── */}
         <div className="mt-6 grid gap-6 lg:grid-cols-3">
           {/* Status */}
-          <div className="glass-surface p-6">
+          <div className="glass-surface p-6" enable-xr>
             <h2 className="mb-4 text-sm font-semibold">Status das Sessões</h2>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
@@ -397,7 +397,7 @@ export default function InstructorDashboard() {
           </div>
 
           {/* Módulos */}
-          <div className="glass-surface p-6">
+          <div className="glass-surface p-6" enable-xr>
             <h2 className="mb-4 text-sm font-semibold">
               Sessões por Módulo
             </h2>
@@ -429,7 +429,7 @@ export default function InstructorDashboard() {
           </div>
 
           {/* Radar */}
-          <div className="glass-surface p-6">
+          <div className="glass-surface p-6" enable-xr>
             <h2 className="mb-4 text-sm font-semibold">
               Métricas por Módulo
             </h2>
@@ -465,7 +465,7 @@ export default function InstructorDashboard() {
         </div>
 
         {/* ── Linha 3: Area evolução de nota ──────────── */}
-        <div className="mt-6 glass-surface p-6">
+        <div className="mt-6 glass-surface p-6" enable-xr>
           <div className="mb-4 flex items-center gap-2">
             <Zap className="h-4 w-4 text-amber-400" />
             <h2 className="text-sm font-semibold">
@@ -514,7 +514,7 @@ export default function InstructorDashboard() {
         <div className="mt-10">
           <h2 className="mb-4 text-lg font-semibold">Alunos</h2>
 
-          <div className="glass-surface overflow-hidden">
+          <div className="glass-surface overflow-hidden" enable-xr>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>

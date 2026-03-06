@@ -78,7 +78,7 @@ function InfoPill({
   accent?: string;
 }) {
   return (
-    <div className="glass-surface flex items-center gap-4 p-5">
+    <div className="glass-surface flex items-center gap-4 p-5" enable-xr>
       <div
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
         style={{ backgroundColor: `${accent}20` }}
@@ -109,7 +109,7 @@ export default function StudentDetail() {
   if (!student) {
     return (
       <main className="immersia-bg flex min-h-screen items-center justify-center text-white">
-        <div className="text-center">
+        <div className="text-center glass-card p-8" enable-xr>
           <p className="text-lg font-semibold">Aluno não encontrado</p>
           <button
             onClick={() => navigate('/instructor')}
@@ -167,7 +167,7 @@ export default function StudentDetail() {
   return (
     <main className="immersia-bg min-h-screen text-white antialiased">
       {/* ── Topbar ─────────────────────────────────────── */}
-      <header className="topbar">
+      <header className="topbar" enable-xr>
         <div className="container-page flex h-16 items-center gap-4">
           <button
             type="button"
@@ -182,7 +182,7 @@ export default function StudentDetail() {
 
       <section className="container-page pb-16 pt-10">
         {/* ── Cabeçalho do aluno ──────────────────────── */}
-        <div className="glass-surface p-8">
+        <div className="glass-surface p-8" enable-xr>
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-2xl font-bold tracking-tight">
@@ -258,7 +258,7 @@ export default function StudentDetail() {
         {/* ── Gráficos ────────────────────────────────── */}
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
           {/* Nota por treinamento */}
-          <div className="glass-surface p-6">
+          <div className="glass-surface p-6" enable-xr>
             <h2 className="mb-4 text-sm font-semibold">
               Nota por Treinamento
             </h2>
@@ -294,7 +294,7 @@ export default function StudentDetail() {
           </div>
 
           {/* Evolução da nota */}
-          <div className="glass-surface p-6">
+          <div className="glass-surface p-6" enable-xr>
             <h2 className="mb-4 text-sm font-semibold">
               Evolução da Nota
             </h2>
@@ -340,7 +340,7 @@ export default function StudentDetail() {
 
         {/* Radar */}
         {radarData.length >= 3 && (
-          <div className="mt-6 glass-surface p-6">
+          <div className="mt-6 glass-surface p-6" enable-xr>
             <h2 className="mb-4 text-sm font-semibold">
               Radar de Desempenho por Treinamento
             </h2>
@@ -386,7 +386,7 @@ export default function StudentDetail() {
         <div className="mt-10">
           <h2 className="mb-4 text-lg font-semibold">Histórico de Sessões</h2>
 
-          <div className="glass-surface overflow-hidden">
+          <div className="glass-surface overflow-hidden" enable-xr>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>

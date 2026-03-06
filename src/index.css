@@ -159,3 +159,30 @@ body {
   width: 14px;
   height: 14px;
 }
+
+html.is-spatial {
+  background-color: transparent;
+  --xr-background-material: transparent;
+}
+
+html.is-spatial [enable-xr] {
+  position: relative;
+  --xr-background-material: translucent;
+}
+
+html.is-spatial .topbar {
+  --xr-background-material: translucent;
+}
+
+html.is-spatial .glass-card {
+  --xr-background-material: thick;
+}
+
+html.is-spatial .glass-surface {
+  --xr-background-material: translucent;
+}
+
+html.is-spatial .card-training {
+  --xr-background-material: translucent;
+  --xr-back: 10;
+}

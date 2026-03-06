@@ -71,7 +71,7 @@ export default function Login() {
     <main className="immersia-bg min-h-screen text-white antialiased">
       <div className="min-h-screen bg-black/10">
         <div className="mx-auto flex min-h-screen max-w-6xl items-center justify-center px-6 py-12">
-          <section className="glass-card" aria-label="Tela de login">
+          <section className="glass-card" aria-label="Tela de login" enable-xr>
             <header className="mb-10 text-center">
               <div className="mx-auto mb-6 flex items-center justify-center">
                 <img

@@ -118,7 +118,7 @@ export default function Gallery() {
   return (
     <main className="immersia-bg min-h-screen text-white antialiased">
       {/* Topbar */}
-      <header className="topbar">
+      <header className="topbar" enable-xr>
         <div className="container-page flex h-16 items-center justify-between">
           <button
             type="button"
@@ -143,6 +143,7 @@ export default function Gallery() {
               <DropdownMenu.Content
                 sideOffset={10}
                 className="min-w-48 rounded-2xl border border-white/15 bg-black/70 p-2 text-sm text-white shadow-[0_20px_70px_rgba(0,0,0,0.65)] backdrop-blur-2xl"
+                enable-xr
               >
                 <DropdownMenu.Item
                   onSelect={(e) => {
@@ -179,7 +180,7 @@ export default function Gallery() {
 
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {mod.trainings.map((t) => (
-                  <article key={t.id} className="card-training">
+                  <article key={t.id} className="card-training" enable-xr>
                     {/* imagem */}
                     <div className="relative h-36 w-full overflow-hidden bg-white/5">
                       {t.imageUrl ? (
