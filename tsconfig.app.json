@@ -15,7 +15,6 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
-    "jsxImportSource": "@webspatial/react-sdk",
 
     /* Linting */
     "strict": true,

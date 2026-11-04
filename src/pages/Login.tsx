@@ -1,226 +1,313 @@
-import { useId, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { User, Lock } from 'lucide-react';
+import { useEffect, useId, useState, type FormEvent } from 'react';
 import {
-  isValidMockPassword,
-  MOCK_PASSWORD,
-  resolveRoleByLogin,
-} from '../mocks/auth';
+  ArrowRight,
+  Building2,
+  GraduationCap,
+  Lock,
+  ShieldCheck,
+  User,
+  UserCog,
+  type LucideIcon,
+} from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 
 import logoUrl from '../assets/Immersia_logo-removebg.png';
+import { getDefaultAppPath } from '../auth/getDefaultAppPath';
+import { useAuth } from '../auth/useAuth';
+import LanguageSelect from '../components/LanguageSelect';
+import { getApiErrorMessage } from '../lib/apiClient';
+import { areDevProfilesEnabled } from '../lib/devProfiles';
+import { DEMO_PASSWORD, isDemoMode } from '../lib/demoMode';
+import { roleLabels, usersSeed, type AppRole } from '../data/mockPlatform';
+
+type DemoRole = {
+  role: AppRole;
+  icon: LucideIcon;
+  description: string;
+};
+
+const demoRoles: DemoRole[] = [
+  {
+    role: 'learner',
+    icon: GraduationCap,
+    description: 'Trilhas encaminhadas, aulas e progresso individual.',
+  },
+  {
+    role: 'instructor',
+    icon: UserCog,
+    description: 'Turmas acompanhadas, resultados e sinais de reforço.',
+  },
+  {
+    role: 'org_admin',
+    icon: Building2,
+    description: 'Usuários, turmas e módulos da organização.',
+  },
+  {
+    role: 'super_admin',
+    icon: ShieldCheck,
+    description: 'Organizações clientes, contratos e catálogo global.',
+  },
+];
+
+function findDemoUser(role: AppRole) {
+  return usersSeed.find((seedUser) => seedUser.role === role && seedUser.status === 'active');
+}
 
 export default function Login() {
   const navigate = useNavigate();
+  const { user, signIn } = useAuth();
 
   const loginId = useId();
   const passId = useId();
-  const errorId = useId();
 
-  // padrão indústria: não preenche nada; aceita email ou username
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const [authError, setAuthError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingRole, setPendingRole] = useState<AppRole | null>(null);
 
-  const [touched, setTouched] = useState({
-    login: false,
-    password: false,
-  });
+  useEffect(() => {
+    if (!user) return;
 
-  const loginError = useMemo(() => {
-    if (!touched.login) return '';
-    if (login.trim().length === 0) return 'Informe seu usuário ou e-mail.';
-    return '';
-  }, [login, touched.login]);
+    navigate(getDefaultAppPath(user.role), { replace: true });
+  }, [navigate, user]);
 
-  const passwordError = useMemo(() => {
-    if (!touched.password) return '';
-    if (!isValidMockPassword(password)) {
-      return `Senha inválida. Use ${MOCK_PASSWORD}.`;
+  async function handleDemoSignIn(role: AppRole) {
+    const demoUser = findDemoUser(role);
+
+    if (!demoUser || isSubmitting) return;
+
+    setAuthError('');
+    setIsSubmitting(true);
+    setPendingRole(role);
+
+    try {
+      const sessionUser = await signIn({ login: demoUser.email, password: DEMO_PASSWORD });
+
+      if (sessionUser) {
+        navigate(getDefaultAppPath(sessionUser.role), { replace: true });
+      }
+    } catch (error) {
+      setAuthError(getApiErrorMessage(error, 'Não foi possível entrar.'));
+    } finally {
+      setIsSubmitting(false);
+      setPendingRole(null);
     }
-    return '';
-  }, [password, touched.password]);
+  }
 
-  const canSubmit = login.trim().length > 0 && isValidMockPassword(password);
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSubmitted(true);
+    setAuthError('');
 
-  function quickLogin(role: 'student' | 'instructor') {
-    if (role === 'instructor') {
-      navigate('/instructor');
+    if (login.trim().length === 0 || password.trim().length === 0) {
+      setAuthError('Preencha usuário/e-mail e senha para continuar.');
       return;
     }
 
-    navigate('/gallery');
-  }
-
-  function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-
-    setTouched({ login: true, password: true });
-
-    if (!canSubmit) return;
-
-    const role = resolveRoleByLogin(login);
-
-    if (role === 'instructor') {
-      navigate('/instructor');
+    if (password.trim().length < 6) {
+      setAuthError('O e-mail ou a senha estão incorretos.');
       return;
     }
 
-    navigate('/gallery');
+    setIsSubmitting(true);
+
+    try {
+      const sessionUser = await signIn({ login, password });
+      setIsSubmitting(false);
+
+      if (!sessionUser) {
+        setAuthError('O e-mail ou a senha estão incorretos.');
+        return;
+      }
+
+      navigate(getDefaultAppPath(sessionUser.role), { replace: true });
+    } catch (error) {
+      setIsSubmitting(false);
+      setAuthError(getApiErrorMessage(error, 'Não foi possível entrar.'));
+    }
   }
+
+  const errorBanner = authError ? (
+    <div className="rounded-3xl border border-rose-300/15 bg-rose-400/10 p-4 text-center text-sm text-rose-100">
+      {authError}
+    </div>
+  ) : null;
+
+  const languagePicker = (
+    <div className="border-t border-white/10 pt-6 text-center">
+      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-white/38">
+        Idioma da plataforma
+      </p>
+      <div className="flex justify-center">
+        <LanguageSelect variant="login" />
+      </div>
+    </div>
+  );
 
   return (
     <main className="immersia-bg min-h-screen text-white antialiased">
       <div className="min-h-screen bg-black/10">
-        <div className="mx-auto flex min-h-screen max-w-6xl items-center justify-center px-6 py-12">
-          <section className="glass-card" aria-label="Tela de login" enable-xr>
-            <header className="mb-10 text-center">
+        <div className="mx-auto flex min-h-screen w-full max-w-6xl items-center justify-center px-4 py-10 sm:px-6 sm:py-12">
+          <section
+            className={isDemoMode ? 'glass-card max-w-[560px]' : 'glass-card max-w-[460px]'}
+            aria-label="Tela de login"
+          >
+            <header className="mb-8 text-center">
               <div className="mx-auto mb-6 flex items-center justify-center">
                 <img
                   src={logoUrl}
                   alt="Immersia"
-                  className="h-16 w-auto sm:h-20 md:h-24 select-none"
+                  className="h-12 w-auto select-none sm:h-16 md:h-20"
                   draggable={false}
                 />
               </div>
+
+              <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+                {isDemoMode ? 'Explore a plataforma' : 'Entrar na plataforma'}
+              </h1>
+              <p className="subtle-text mt-4">
+                {isDemoMode
+                  ? 'Escolha um perfil para navegar pelo ambiente de demonstração.'
+                  : 'Acesse com seu usuário para continuar.'}
+              </p>
             </header>
 
-            {/* VR: mais espaçamento e controles maiores */}
-            <form onSubmit={onSubmit} noValidate className="space-y-4">
-              {/* Login */}
-              <div>
-                <label htmlFor={loginId} className="sr-only">
-                  Usuário ou e-mail
-                </label>
+            {/* Na vitrine nao existem contas reais: o acesso por credenciais fica
+                de fora e so os perfis de demonstracao aparecem. */}
+            {isDemoMode ? (
+              <div className="space-y-5">
+                {errorBanner}
 
-                <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-5 flex items-center">
-                    <User className="h-5 w-5 text-white/60" />
+                <div className="grid gap-3">
+                  {demoRoles.map(({ role, icon: Icon, description }) => {
+                    const demoUser = findDemoUser(role);
+                    const isPending = pendingRole === role;
+
+                    return (
+                      <button
+                        key={role}
+                        type="button"
+                        onClick={() => void handleDemoSignIn(role)}
+                        disabled={isSubmitting || !demoUser}
+                        className="group flex w-full items-center gap-4 rounded-[24px] border border-white/12 bg-white/6 px-4 py-4 text-left transition hover:border-cyan-300/30 hover:bg-cyan-400/10 disabled:cursor-not-allowed disabled:opacity-50 sm:px-5"
+                      >
+                        <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-cyan-400/12 text-cyan-100 ring-1 ring-cyan-300/20">
+                          <Icon className="h-6 w-6" />
+                        </span>
+
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-base font-semibold text-white">
+                            {roleLabels[role]}
+                          </span>
+                          <span className="mt-0.5 block text-xs leading-5 text-white/55">
+                            {isPending ? 'Abrindo perfil...' : description}
+                          </span>
+                        </span>
+
+                        <ArrowRight className="h-5 w-5 shrink-0 text-white/35 transition group-hover:translate-x-1 group-hover:text-cyan-100" />
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <p className="text-center text-xs leading-5 text-white/40">
+                  Ambiente de demonstração com dados fictícios. As alterações que você fizer
+                  valem apenas nesta aba.
+                </p>
+
+                {languagePicker}
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} noValidate className="space-y-4">
+                {errorBanner}
+
+                <div>
+                  <label htmlFor={loginId} className="sr-only">
+                    E-mail
+                  </label>
+
+                  {submitted && login.trim().length === 0 ? (
+                    <p className="field-error field-error-center field-error-top">
+                      Informe seu e-mail.
+                    </p>
+                  ) : null}
+
+                  <div className="relative">
+                    <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center">
+                      <User className="h-5 w-5 text-white/60" />
+                    </div>
+
+                    <input
+                      id={loginId}
+                      name="login"
+                      type="email"
+                      autoComplete="email"
+                      value={login}
+                      onChange={(event) => setLogin(event.target.value)}
+                      placeholder="E-mail"
+                      aria-invalid={submitted && login.trim().length === 0 ? 'true' : 'false'}
+                      className={[
+                        'pill-input py-3.5 pl-12 pr-4 text-sm sm:text-base',
+                        submitted && login.trim().length === 0
+                          ? 'border-rose-300/40 focus:border-rose-300'
+                          : '',
+                      ].join(' ')}
+                    />
                   </div>
-
-                  <input
-                    id={loginId}
-                    name="login"
-                    type="text"
-                    inputMode="email"
-                    autoComplete="username"
-                    value={login}
-                    onChange={(e) => setLogin(e.target.value)}
-                    onBlur={() => setTouched((s) => ({ ...s, login: true }))}
-                    placeholder="Usuário ou e-mail"
-                    aria-invalid={loginError ? 'true' : 'false'}
-                    className={[
-                      'pill-input py-4 pl-14 pr-5 text-base',
-                      loginError
-                        ? 'border-rose-300/40 focus:border-rose-300'
-                        : '',
-                    ].join(' ')}
-                  />
                 </div>
 
-                <div className="pt-2 min-h-[22px]">
-                  <p
-                    className={[
-                      'text-base text-rose-300 transition-opacity duration-150',
-                      loginError ? 'opacity-100' : 'opacity-0',
-                    ].join(' ')}
-                    aria-live="polite"
-                  >
-                    {loginError || ' '}
-                  </p>
-                </div>
-              </div>
+                <div>
+                  <label htmlFor={passId} className="sr-only">
+                    Senha
+                  </label>
 
-              {/* Password */}
-              <div>
-                <label htmlFor={passId} className="sr-only">
-                  Senha
-                </label>
+                  {submitted && password.trim().length === 0 ? (
+                    <p className="field-error field-error-center field-error-top">
+                      Informe sua senha.
+                    </p>
+                  ) : null}
 
-                <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-5 flex items-center">
-                    <Lock className="h-5 w-5 text-white/60" />
+                  <div className="relative">
+                    <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center">
+                      <Lock className="h-5 w-5 text-white/60" />
+                    </div>
+
+                    <input
+                      id={passId}
+                      name="password"
+                      type="password"
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      placeholder="Senha"
+                      aria-invalid={submitted && password.trim().length === 0 ? 'true' : 'false'}
+                      className={[
+                        'pill-input py-3.5 pl-12 pr-4 text-sm sm:text-base',
+                        submitted && password.trim().length === 0
+                          ? 'border-rose-300/40 focus:border-rose-300'
+                          : '',
+                      ].join(' ')}
+                    />
                   </div>
-
-                  <input
-                    id={passId}
-                    name="password"
-                    type="password"
-                    autoComplete="current-password"
-                    minLength={9}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    onBlur={() => setTouched((s) => ({ ...s, password: true }))}
-                    placeholder="Senha"
-                    aria-invalid={passwordError ? 'true' : 'false'}
-                    aria-describedby={passwordError ? errorId : undefined}
-                    className={[
-                      'pill-input py-4 pl-14 pr-5 text-base',
-                      passwordError
-                        ? 'border-rose-300/40 focus:border-rose-300'
-                        : '',
-                    ].join(' ')}
-                  />
                 </div>
 
-                <div className="pt-2 min-h-[22px]">
-                  <p
-                    id={errorId}
-                    className={[
-                      'text-base text-rose-300 transition-opacity duration-150',
-                      passwordError ? 'opacity-100' : 'opacity-0',
-                    ].join(' ')}
-                    aria-live="polite"
-                  >
-                    {passwordError || ' '}
-                  </p>
-                </div>
-              </div>
-
-              {/* Options */}
-              <div className="flex items-center justify-between gap-4 text-base text-white/75">
-                <label className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    className="h-5 w-5 rounded border-white/30 bg-white/10"
-                  />
-                  Lembrar de mim
-                </label>
-
-                <button
-                  type="button"
-                  className="hover:text-white underline underline-offset-4"
-                >
-                  Esqueci a senha
-                </button>
-              </div>
-
-              {/* CTA */}
-              <button
-                type="submit"
-                disabled={!canSubmit}
-                className="primary-btn py-4 text-base mt-4"
-              >
-                Entrar
-              </button>
-
-              <div className="grid grid-cols-2 gap-3 pt-1">
-                <button
-                  type="button"
-                  onClick={() => quickLogin('student')}
-                  className="w-full rounded-full border border-emerald-300/30 bg-emerald-500/20 py-3 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-500/30 active:translate-y-[1px]"
-                >
-                  Eu sou aluno(a)
+                <button type="submit" className="primary-btn mt-2 py-3.5" disabled={isSubmitting}>
+                  {isSubmitting ? 'Entrando...' : 'Entrar'}
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => quickLogin('instructor')}
-                  className="w-full rounded-full border border-cyan-300/30 bg-cyan-500/20 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-500/30 active:translate-y-[1px]"
-                >
-                  Eu sou instrutor(a)
-                </button>
-              </div>
-            </form>
+                {languagePicker}
+
+                {areDevProfilesEnabled() ? (
+                  <div className="border-t border-white/10 pt-4 text-center">
+                    <Link to="/dev" className="ghost-btn">
+                      Perfis de debug
+                    </Link>
+                  </div>
+                ) : null}
+              </form>
+            )}
           </section>
         </div>
       </div>
