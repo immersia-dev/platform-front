@@ -6,15 +6,20 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:avp": "cross-env XR_ENV=avp vite",
     "build": "tsc -b && vite build",
+    "build:avp": "cross-env XR_ENV=avp vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "run:avp": "webspatial-builder run --base=http://localhost:5173/webspatial/avp"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
     "@radix-ui/react-separator": "^1.1.8",
     "@radix-ui/react-tabs": "^1.1.13",
+    "@webspatial/core-sdk": "^1.7.0",
+    "@webspatial/react-sdk": "^1.7.0",
     "framer-motion": "^12.24.9",
     "lucide-react": "^0.562.0",
     "react": "^19.2.0",
@@ -28,7 +33,11 @@
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
+    "@webspatial/builder": "^1.7.0",
+    "@webspatial/platform-visionos": "^1.7.0",
+    "@webspatial/vite-plugin": "^1.0.1",
     "autoprefixer": "^10.4.23",
+    "cross-env": "^10.1.0",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",

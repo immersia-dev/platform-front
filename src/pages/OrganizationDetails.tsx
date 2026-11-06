@@ -478,7 +478,7 @@ export default function OrganizationDetails() {
         />
       </section>
 
-      <section className="admin-card">
+      <section className="__enableXr__ admin-card">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           <div className="readonly-field">
             <span className="readonly-field-label">Status</span>
@@ -511,7 +511,7 @@ export default function OrganizationDetails() {
         </div>
       </section>
 
-      <section className="table-shell">
+      <section className="__enableXr__ table-shell">
         <div className="table-shell-header gap-4">
           <div>
             <h2 className="text-lg font-semibold text-white">Usuários da organização</h2>
@@ -632,7 +632,7 @@ export default function OrganizationDetails() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <article className="table-shell">
+        <article className="__enableXr__ table-shell">
           <div className="table-shell-header">
             <div>
               <h2 className="text-lg font-semibold text-white">Módulos liberados</h2>
@@ -682,7 +682,7 @@ export default function OrganizationDetails() {
           </div>
         </article>
 
-        <article className="table-shell">
+        <article className="__enableXr__ table-shell">
           <div className="table-shell-header">
             <div>
               <h2 className="text-lg font-semibold text-white">Turmas</h2>

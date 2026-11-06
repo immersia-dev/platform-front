@@ -81,7 +81,7 @@ function FormSkeleton() {
   return (
     <section className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
       <SkeletonBlock className="h-80 rounded-[28px]" />
-      <div className="form-card">
+      <div className="__enableXr__ form-card">
         <SkeletonText className="h-5 w-48" />
         <div className="mt-7 grid gap-4 md:grid-cols-2">
           {Array.from({ length: 8 }, (_, index) => (

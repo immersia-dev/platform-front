@@ -35,7 +35,7 @@ export default function ActionDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="action-dialog-title"
-        className="dialog-panel"
+        className="__enableXr__ dialog-panel"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div>

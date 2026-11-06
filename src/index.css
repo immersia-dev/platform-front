@@ -776,3 +776,43 @@ textarea:focus-visible,
     @apply rounded-[20px] border border-white/10 bg-white/5 px-4 py-3;
   }
 }
+
+/* ---------------------------------------------------------------- WebSpatial (Apple Vision Pro)
+   Only with `npm run dev:avp` / `build:avp` (html.is-spatial). Elements marked with the `__enableXr__` class
+   (sidebar, top bar, cards, tables, forms, dialogs) float as panels; the page itself becomes transparent.
+   --xr-back: depth in points, in front of the window. */
+html.is-spatial,
+html.is-spatial body,
+html.is-spatial .immersia-bg {
+  background: transparent;
+  --xr-background-material: transparent;
+}
+
+html.is-spatial .immersia-bg > div {
+  background: transparent;
+}
+
+html.is-spatial .sidebar-panel,
+html.is-spatial .topbar {
+  --xr-background-material: translucent;
+}
+
+html.is-spatial .admin-card,
+html.is-spatial .table-shell,
+html.is-spatial .form-card,
+html.is-spatial .glass-card {
+  --xr-background-material: translucent;
+  --xr-back: 8;
+}
+
+html.is-spatial .stat-card,
+html.is-spatial .quick-link-card,
+html.is-spatial .analytics-highlight-card {
+  --xr-background-material: thick;
+  --xr-back: 16;
+}
+
+html.is-spatial .dialog-panel {
+  --xr-background-material: thick;
+  --xr-back: 40;
+}

@@ -110,7 +110,7 @@ export default function Students() {
     <div className="space-y-8">
       <PageHeader title="Alunos" />
 
-      <section className="table-shell">
+      <section className="__enableXr__ table-shell">
         <div className="table-shell-header gap-4">
           <div>
             <h2 className="text-lg font-semibold text-white">Alunos cadastrados</h2>

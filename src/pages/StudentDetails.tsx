@@ -162,7 +162,7 @@ export default function StudentDetails() {
         }
       />
 
-      <section className="admin-card">
+      <section className="__enableXr__ admin-card">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="text-2xl font-semibold text-white">Informações do aluno</h2>
@@ -326,7 +326,7 @@ export default function StudentDetails() {
       />
 
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <article className="admin-card">
+        <article className="__enableXr__ admin-card">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="section-kicker">Evolução</p>
@@ -382,7 +382,7 @@ export default function StudentDetails() {
           </div>
         </article>
 
-        <article className="admin-card">
+        <article className="__enableXr__ admin-card">
           <p className="section-kicker">Módulos</p>
           <h2 className="mt-3 text-2xl font-semibold text-white">Comparativo por módulo</h2>
           <p className="mt-2 text-sm text-white/60">
@@ -425,7 +425,7 @@ export default function StudentDetails() {
         </article>
       </section>
 
-      <section className="table-shell">
+      <section className="__enableXr__ table-shell">
         <div className="table-shell-header gap-4">
           <div>
             <h2 className="text-lg font-semibold text-white">Tentativas e relatórios</h2>

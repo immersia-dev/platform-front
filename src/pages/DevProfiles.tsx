@@ -112,7 +112,7 @@ export default function DevProfiles() {
     return (
       <main className="immersia-bg min-h-screen text-white antialiased">
         <div className="flex min-h-screen items-center justify-center bg-black/10 px-6 py-12">
-          <section className="glass-card max-w-[520px] text-center">
+          <section className="__enableXr__ glass-card max-w-[520px] text-center">
             <img
               src={logoUrl}
               alt="Immersia"
@@ -165,7 +165,7 @@ export default function DevProfiles() {
                 <Link
                   key={profile.role}
                   to={`/dev/${profile.slug}`}
-                  className="admin-card group flex min-h-[260px] flex-col justify-between transition hover:-translate-y-1 hover:border-cyan-200/30 hover:bg-white/[0.08]"
+                  className="__enableXr__ admin-card group flex min-h-[260px] flex-col justify-between transition hover:-translate-y-1 hover:border-cyan-200/30 hover:bg-white/[0.08]"
                 >
                   <div>
                     <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-400/12 text-cyan-100 ring-1 ring-cyan-300/20">

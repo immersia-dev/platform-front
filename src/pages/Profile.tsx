@@ -265,7 +265,7 @@ export default function Profile() {
       <PageHeader title="Dados do usuário" />
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <section className="admin-card space-y-8">
+        <section className="__enableXr__ admin-card space-y-8">
           <div className="grid gap-8 xl:grid-cols-[220px_1fr]">
             <div className="flex w-full flex-col items-center gap-4">
               <div className="relative flex h-32 w-32 items-center justify-center overflow-hidden rounded-[36px] border border-white/12 bg-cyan-400/10 ring-1 ring-cyan-300/20">

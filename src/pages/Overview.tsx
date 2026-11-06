@@ -233,7 +233,7 @@ function InstructorOverview({
         ))}
       </section>
 
-      <section className="table-shell">
+      <section className="__enableXr__ table-shell">
         <div className="table-shell-header gap-4">
           <div>
             <h2 className="text-lg font-semibold text-white">Execuções recentes</h2>
@@ -306,7 +306,7 @@ function InstructorOverview({
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.25fr_0.95fr]">
-        <article className="admin-card">
+        <article className="__enableXr__ admin-card">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="section-kicker">Série temporal</p>
@@ -391,7 +391,7 @@ function InstructorOverview({
           </div>
         </article>
 
-        <article className="admin-card">
+        <article className="__enableXr__ admin-card">
           <p className="section-kicker">Distribuição</p>
           <h2 className="mt-3 text-2xl font-semibold text-white">Faixas de desempenho</h2>
           <p className="mt-2 text-sm text-white/60">
@@ -433,7 +433,7 @@ function InstructorOverview({
           </div>
 
           <div className="mt-8 grid gap-3 sm:grid-cols-2">
-            <div className="analytics-highlight-card">
+            <div className="__enableXr__ analytics-highlight-card">
               <p className="text-xs uppercase tracking-[0.18em] text-white/45">Reforço</p>
               <p className="mt-3 text-3xl font-semibold text-white">{learnersNeedingSupport.length}</p>
               <p className="mt-2 text-sm text-white/55">
@@ -441,7 +441,7 @@ function InstructorOverview({
               </p>
             </div>
 
-            <div className="analytics-highlight-card">
+            <div className="__enableXr__ analytics-highlight-card">
               <p className="text-xs uppercase tracking-[0.18em] text-white/45">Pendentes</p>
               <p className="mt-3 text-3xl font-semibold text-white">{pendingLearners.length}</p>
               <p className="mt-2 text-sm text-white/55">
@@ -452,7 +452,7 @@ function InstructorOverview({
         </article>
       </section>
 
-      <section className="admin-card">
+      <section className="__enableXr__ admin-card">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="section-kicker">Turmas</p>
@@ -516,7 +516,7 @@ function InstructorOverview({
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-        <article className="admin-card">
+        <article className="__enableXr__ admin-card">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="section-kicker">Módulos</p>
@@ -569,7 +569,7 @@ function InstructorOverview({
           </div>
         </article>
 
-        <article className="admin-card">
+        <article className="__enableXr__ admin-card">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="section-kicker">Alunos</p>
@@ -906,7 +906,7 @@ function OrgAdminOverview({
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-        <article className="admin-card">
+        <article className="__enableXr__ admin-card">
           <p className="section-kicker">Burndown</p>
           <h2 className="mt-3 text-2xl font-semibold text-white">Pendências de execução</h2>
           <p className="mt-2 text-sm text-white/60">
@@ -922,7 +922,7 @@ function OrgAdminOverview({
           </div>
         </article>
 
-        <article className="admin-card">
+        <article className="__enableXr__ admin-card">
           <p className="section-kicker">Alertas</p>
           <h2 className="mt-3 text-2xl font-semibold text-white">Atenções gerenciais</h2>
           <p className="mt-2 text-sm text-white/60">
@@ -932,7 +932,7 @@ function OrgAdminOverview({
           <div className="mt-6 space-y-3">
             {alerts.length ? (
               alerts.map((alert) => (
-                <Link key={alert.title} to={alert.to} className="quick-link-card">
+                <Link key={alert.title} to={alert.to} className="__enableXr__ quick-link-card">
                   <div>
                     <p className="text-sm font-semibold text-white">{alert.title}</p>
                     <p className="mt-1 text-sm text-white/60">{alert.description}</p>
@@ -952,7 +952,7 @@ function OrgAdminOverview({
         </article>
       </section>
 
-      <section className="table-shell">
+      <section className="__enableXr__ table-shell">
         <div className="table-shell-header gap-4">
           <div>
             <h2 className="text-lg font-semibold text-white">Carga por instrutor</h2>
@@ -999,7 +999,7 @@ function OrgAdminOverview({
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-        <article className="admin-card">
+        <article className="__enableXr__ admin-card">
           <p className="section-kicker">Turmas</p>
           <h2 className="mt-3 text-2xl font-semibold text-white">Aprendizado por turma</h2>
           <p className="mt-2 text-sm text-white/60">
@@ -1040,7 +1040,7 @@ function OrgAdminOverview({
           </div>
         </article>
 
-        <article className="admin-card">
+        <article className="__enableXr__ admin-card">
           <p className="section-kicker">Treinamentos</p>
           <h2 className="mt-3 text-2xl font-semibold text-white">Uso por módulo</h2>
           <p className="mt-2 text-sm text-white/60">
@@ -1084,7 +1084,7 @@ function OrgAdminOverview({
         </article>
       </section>
 
-      <section className="table-shell">
+      <section className="__enableXr__ table-shell">
         <div className="table-shell-header gap-4">
           <div>
             <h2 className="text-lg font-semibold text-white">Execuções recentes</h2>
@@ -1251,7 +1251,7 @@ function SuperAdminOverview() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.25fr_0.95fr]">
-        <article className="table-shell">
+        <article className="__enableXr__ table-shell">
           <div className="table-shell-header gap-4">
             <div>
               <h2 className="text-lg font-semibold text-white">Organizações clientes</h2>
@@ -1314,7 +1314,7 @@ function SuperAdminOverview() {
           </div>
         </article>
 
-        <article className="admin-card">
+        <article className="__enableXr__ admin-card">
           <div className="flex items-center gap-3">
             <div className="metric-icon">
               <Zap className="h-5 w-5" />
@@ -1323,21 +1323,21 @@ function SuperAdminOverview() {
           </div>
 
           <div className="mt-6 space-y-3">
-            <Link to="/app/organizations" className="quick-link-card">
+            <Link to="/app/organizations" className="__enableXr__ quick-link-card">
               <div className="flex items-center gap-3">
                 <Building2 className="h-5 w-5 text-cyan-200" />
                 <p className="text-sm font-semibold text-white">Criar organização</p>
               </div>
             </Link>
 
-            <Link to="/app/users" className="quick-link-card">
+            <Link to="/app/users" className="__enableXr__ quick-link-card">
               <div className="flex items-center gap-3">
                 <UserCheck className="h-5 w-5 text-cyan-200" />
                 <p className="text-sm font-semibold text-white">Cadastrar admins</p>
               </div>
             </Link>
 
-            <Link to="/app/studies" className="quick-link-card">
+            <Link to="/app/studies" className="__enableXr__ quick-link-card">
               <div className="flex items-center gap-3">
                 <BookOpenText className="h-5 w-5 text-cyan-200" />
                 <p className="text-sm font-semibold text-white">Revisar catálogo</p>
@@ -1347,7 +1347,7 @@ function SuperAdminOverview() {
         </article>
       </section>
 
-      <section className="admin-card">
+      <section className="__enableXr__ admin-card">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h2 className="text-2xl font-semibold text-white">Liberação por módulo</h2>
@@ -1447,7 +1447,7 @@ export default function Overview() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
-        <article className="admin-card">
+        <article className="__enableXr__ admin-card">
           <p className="section-kicker">Próximos passos</p>
           <h2 className="mt-3 text-2xl font-semibold text-white">Fluxo base do MVP</h2>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
@@ -1483,11 +1483,11 @@ export default function Overview() {
           </div>
         </article>
 
-        <article className="admin-card">
+        <article className="__enableXr__ admin-card">
           <p className="section-kicker">Atalhos</p>
           <h2 className="mt-3 text-2xl font-semibold text-white">Acessos rápidos</h2>
           <div className="mt-6 space-y-3">
-            <Link to="/app/users" className="quick-link-card">
+            <Link to="/app/users" className="__enableXr__ quick-link-card">
               <div>
                 <p className="text-sm font-semibold text-white">Abrir usuários</p>
                 <p className="mt-1 text-sm text-white/60">Revisar perfis e permissões por role.</p>
@@ -1495,7 +1495,7 @@ export default function Overview() {
               <ArrowRight className="h-5 w-5 text-white/50" />
             </Link>
 
-            <Link to="/app/studies" className="quick-link-card">
+            <Link to="/app/studies" className="__enableXr__ quick-link-card">
               <div>
                 <p className="text-sm font-semibold text-white">Ver estudos</p>
                 <p className="mt-1 text-sm text-white/60">Explorar trilhas e materiais do perfil atual.</p>

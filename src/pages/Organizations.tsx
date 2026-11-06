@@ -226,7 +226,7 @@ export default function Organizations() {
         />
       </section>
 
-      <section className="table-shell">
+      <section className="__enableXr__ table-shell">
         <div className="table-shell-header gap-4">
           <div>
             <h2 className="text-lg font-semibold text-white">Organizações cadastradas</h2>

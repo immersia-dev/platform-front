@@ -276,7 +276,7 @@ export default function Users() {
         }
       />
 
-      <section className="table-shell">
+      <section className="__enableXr__ table-shell">
         <div className="table-shell-header gap-4">
           <div>
             <h2 className="text-lg font-semibold text-white">Perfis cadastrados</h2>

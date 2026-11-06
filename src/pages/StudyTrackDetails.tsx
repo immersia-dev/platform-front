@@ -274,7 +274,7 @@ export default function StudyTrackDetails() {
         </div>
       </section>
 
-      <section className="admin-card">
+      <section className="__enableXr__ admin-card">
         <p className="section-kicker">Aulas</p>
         <h2 className="mt-3 text-2xl font-semibold text-white">Sequencia da trilha</h2>
 
@@ -427,7 +427,7 @@ export default function StudyTrackDetails() {
       </section>
 
       {user.role !== 'learner' ? (
-        <section className="table-shell">
+        <section className="__enableXr__ table-shell">
           <div className="table-shell-header">
             <div>
               <h2 className="text-lg font-semibold text-white">Progresso por turma</h2>
@@ -489,7 +489,7 @@ export default function StudyTrackDetails() {
 
       {metaLaunch ? (
         <div className="dialog-backdrop" role="dialog" aria-modal="true">
-          <div className="dialog-panel max-w-2xl">
+          <div className="__enableXr__ dialog-panel max-w-2xl">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="section-kicker">App Meta</p>

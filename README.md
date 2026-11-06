@@ -34,3 +34,15 @@ npm run dev
 ```
 
 Com Docker Compose, `VITE_API_URL` ja e configurado para `http://localhost:8000/api/v1`.
+
+## Apple Vision Pro (WebSpatial)
+
+Na branch `feature/webspatial`, a mesma aplicação roda como app espacial no Vision Pro, com [WebSpatial](https://webspatial.dev):
+
+| Comando | Faz |
+| --- | --- |
+| `npm run dev:avp` | Servidor de desenvolvimento no modo espacial (`/webspatial/avp/`) |
+| `npm run run:avp` | Abre esse servidor no simulador do visionOS (requer macOS com Xcode) |
+| `npm run build:avp` | Build espacial em `dist/webspatial/avp/` |
+
+Elementos com a classe `__enableXr__` (barra lateral, barra do topo, cards, tabelas, formulários e diálogos) viram painéis flutuantes. O material e a profundidade de cada tipo ficam no fim de `src/index.css` (`html.is-spatial ...`). Fora desses comandos, a classe não tem efeito e o app é o React normal. O protótipo anterior, com páginas próprias e dados mock, fica preservado na branch `prototype/webspatial`.

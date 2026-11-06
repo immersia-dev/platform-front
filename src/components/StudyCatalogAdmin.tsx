@@ -151,7 +151,7 @@ export default function StudyCatalogAdmin() {
   }
 
   return (
-    <section className="admin-card">
+    <section className="__enableXr__ admin-card">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="section-kicker">Curadoria</p>

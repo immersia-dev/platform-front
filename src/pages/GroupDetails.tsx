@@ -351,7 +351,7 @@ export default function GroupDetails() {
         }
       />
 
-      <section className="admin-card">
+      <section className="__enableXr__ admin-card">
         <div className="grid gap-4 lg:grid-cols-4">
           <div className="readonly-field lg:col-span-2">
             <span className="readonly-field-label">Descrição</span>
@@ -431,7 +431,7 @@ export default function GroupDetails() {
         />
       </section>
 
-      <section className="admin-card">
+      <section className="__enableXr__ admin-card">
         <p className="section-kicker">Evolução</p>
         <h2 className="mt-3 text-2xl font-semibold text-white">Curva da turma</h2>
         <p className="mt-2 text-sm text-white/60">
@@ -443,7 +443,7 @@ export default function GroupDetails() {
         </div>
       </section>
 
-      <section className="table-shell">
+      <section className="__enableXr__ table-shell">
         <div className="table-shell-header gap-4">
           <div>
             <h2 className="text-lg font-semibold text-white">Alunos da turma</h2>
@@ -556,7 +556,7 @@ export default function GroupDetails() {
         />
       </section>
 
-      <section className="table-shell">
+      <section className="__enableXr__ table-shell">
         <div className="table-shell-header gap-4">
           <div>
             <h2 className="text-lg font-semibold text-white">Trilhas encaminhadas</h2>

@@ -11,7 +11,7 @@ type StatCardProps = {
 
 export default function StatCard({ label, value, caption, tooltip, icon: Icon }: StatCardProps) {
   return (
-    <article className="stat-card">
+    <article className="__enableXr__ stat-card">
       <div className="stat-card-header">
         <div className="stat-card-title">
           {Icon ? (

@@ -128,7 +128,7 @@ export default function AppShell() {
 
           <aside
             className={[
-              'sidebar-panel fixed inset-y-0 left-0 z-50 w-[290px] transition-transform duration-200 lg:translate-x-0',
+              '__enableXr__ sidebar-panel fixed inset-y-0 left-0 z-50 w-[290px] transition-transform duration-200 lg:translate-x-0',
               mobileMenuOpen ? 'translate-x-0' : '-translate-x-full',
             ].join(' ')}
           >
@@ -152,7 +152,7 @@ export default function AppShell() {
               </button>
             </div>
 
-            <div className="admin-card mt-6">
+            <div className="__enableXr__ admin-card mt-6">
               <div className="flex items-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-400/15 text-sm font-semibold text-cyan-100 ring-1 ring-cyan-300/20">
                   {getInitials(user.name)}
@@ -205,7 +205,7 @@ export default function AppShell() {
           </aside>
 
           <div className="flex min-h-screen w-full min-w-0 flex-1 flex-col lg:pl-[290px]">
-            <header className="topbar">
+            <header className="__enableXr__ topbar">
               <div className="container-page flex min-h-[72px] items-center justify-between gap-4 py-4">
                 <div className="flex min-w-0 items-center gap-3">
                   <button

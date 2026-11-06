@@ -1,0 +1,12 @@
+{
+  "name": "Immersia",
+  "short_name": "Immersia",
+  "start_url": "./",
+  "display": "standalone",
+  "xr_main_scene": {
+    "default_size": {
+      "width": 1280,
+      "height": 900
+    }
+  }
+}

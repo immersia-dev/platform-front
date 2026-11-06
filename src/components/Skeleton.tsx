@@ -24,7 +24,7 @@ export function SkeletonStatGrid({ count = 4 }: { count?: number }) {
   return (
     <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       {Array.from({ length: count }, (_, index) => (
-        <article key={index} className="stat-card">
+        <article key={index} className="__enableXr__ stat-card">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
               <SkeletonBlock className="h-9 w-9 rounded-2xl" />
@@ -42,7 +42,7 @@ export function SkeletonStatGrid({ count = 4 }: { count?: number }) {
 
 export function SkeletonTable({ rows = 5, columns = 5 }: { rows?: number; columns?: number }) {
   return (
-    <section className="table-shell">
+    <section className="__enableXr__ table-shell">
       <div className="table-shell-header">
         <div>
           <SkeletonText className="h-5 w-48" />
