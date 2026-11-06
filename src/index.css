@@ -1,5 +1,10 @@
 @import 'tailwindcss';
 
+/* 3xl: monitores largos (1920 px ou mais, como 2K e 4K) */
+@theme {
+  --breakpoint-3xl: 120rem;
+}
+
 html,
 body,
 #root {
@@ -14,9 +19,21 @@ body {
 
 .immersia-bg {
   background:
-    radial-gradient(900px 520px at 20% 0%, rgba(42, 198, 255, 0.2), transparent 55%),
-    radial-gradient(760px 520px at 85% 18%, rgba(217, 70, 239, 0.18), transparent 58%),
-    radial-gradient(900px 520px at 60% 100%, rgba(124, 58, 237, 0.24), transparent 60%),
+    radial-gradient(
+      900px 520px at 20% 0%,
+      rgba(42, 198, 255, 0.2),
+      transparent 55%
+    ),
+    radial-gradient(
+      760px 520px at 85% 18%,
+      rgba(217, 70, 239, 0.18),
+      transparent 58%
+    ),
+    radial-gradient(
+      900px 520px at 60% 100%,
+      rgba(124, 58, 237, 0.24),
+      transparent 60%
+    ),
     linear-gradient(180deg, #070615 0%, #0a0820 45%, #070615 100%);
 }
 
@@ -30,14 +47,19 @@ textarea:focus-visible,
   outline-offset: 3px;
 }
 
+/* barras de rolagem discretas: finas e neutras, mais visíveis só ao passar o mouse */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(124, 58, 237, 0.9) rgba(255, 255, 255, 0.08);
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+
+*:hover {
+  scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
 }
 
 *::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
 }
 
 *::-webkit-scrollbar-track {
@@ -46,13 +68,14 @@ textarea:focus-visible,
 
 *::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: linear-gradient(180deg, rgba(42, 198, 255, 0.95), rgba(124, 58, 237, 0.95));
-  border: 3px solid rgba(0, 0, 0, 0.35);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  background: rgba(255, 255, 255, 0.14);
+  border: 3px solid transparent;
+  background-clip: padding-box;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(42, 198, 255, 1), rgba(168, 85, 247, 1));
+  background: rgba(255, 255, 255, 0.3);
+  background-clip: padding-box;
 }
 
 *::-webkit-scrollbar-corner {
@@ -61,7 +84,7 @@ textarea:focus-visible,
 
 @layer components {
   .container-page {
-    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px] 3xl:max-w-[1840px] 3xl:px-10;
   }
 
   .topbar {
@@ -537,7 +560,7 @@ textarea:focus-visible,
   }
 
   .dialog-panel {
-    @apply w-full max-w-xl rounded-[30px] border border-white/12 bg-[#12101d]/95 p-6 shadow-[0_34px_100px_rgba(0,0,0,0.6)];
+    @apply max-h-[calc(100vh-4rem)] w-full max-w-xl overflow-y-auto rounded-[30px] border border-white/12 bg-[#12101d]/95 p-6 shadow-[0_34px_100px_rgba(0,0,0,0.6)];
   }
 
   .dialog-body {
@@ -553,7 +576,11 @@ textarea:focus-visible,
   }
 
   .admin-input {
-    @apply w-full rounded-[20px] border border-white/12 bg-black/22 px-4 py-3 text-sm text-white placeholder:text-white/38 outline-none transition focus:border-cyan-300;
+    @apply w-full rounded-[20px] border border-white/12 bg-black/22 px-4 py-3 text-sm text-white placeholder:text-white/38 outline-none transition hover:border-white/25 focus:border-cyan-300/70 disabled:cursor-not-allowed disabled:opacity-50;
+    color-scheme: dark;
+  }
+  textarea.admin-input {
+    @apply min-h-24 resize-y leading-relaxed;
   }
 
   .profile-field {
@@ -569,7 +596,17 @@ textarea:focus-visible,
   }
 
   .admin-select {
-    @apply w-full rounded-[20px] border border-white/12 bg-black/22 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300;
+    @apply w-full cursor-pointer appearance-none rounded-[20px] border border-white/12 bg-black/22 py-3 pl-4 pr-11 text-sm text-white outline-none transition hover:border-white/25 focus:border-cyan-300;
+    color-scheme: dark;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.6)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+  }
+
+  .admin-select option,
+  .admin-select optgroup {
+    background-color: #15122a;
+    color: #fff;
   }
 
   .status-pill {
@@ -775,4 +812,257 @@ textarea:focus-visible,
   .permission-item {
     @apply rounded-[20px] border border-white/10 bg-white/5 px-4 py-3;
   }
+}
+
+/* Certificado: só a folha sai na impressão (ou no "salvar em PDF") */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 12mm;
+  }
+  body {
+    background: #fff !important;
+  }
+  body * {
+    visibility: hidden;
+  }
+  .certificate-print,
+  .certificate-print * {
+    visibility: visible;
+  }
+  .certificate-print {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    max-width: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Plataforma (modo API): visual enxuto — títulos curtos, cartões leves, tabelas sem caixa-alta. */
+@layer components {
+  .p-title {
+    @apply text-2xl font-semibold tracking-tight text-white sm:text-[1.7rem];
+  }
+  .p-sub {
+    @apply mt-1 text-sm text-white/55;
+  }
+  .p-card {
+    @apply min-w-0 rounded-3xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl sm:p-6;
+  }
+  .p-card-title {
+    @apply text-base font-semibold text-white;
+  }
+  .p-stat {
+    @apply rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4;
+  }
+  .p-table {
+    @apply w-full text-sm;
+  }
+  .p-table thead th {
+    @apply whitespace-nowrap border-b border-white/10 px-4 py-2.5 text-left text-xs font-medium text-white/45 first:pl-5 last:pr-5 sm:first:pl-6 sm:last:pr-6;
+  }
+  .p-table tbody td {
+    @apply border-b border-white/[0.06] px-4 py-3 align-middle text-white/75 first:pl-5 last:pr-5 sm:first:pl-6 sm:last:pr-6;
+  }
+  .p-table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+  .p-table tbody tr:hover td {
+    @apply bg-white/[0.025];
+  }
+  .p-nav-item {
+    @apply flex items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-sm font-medium text-white/70 transition hover:bg-white/[0.06] hover:text-white;
+  }
+  .p-nav-item-active {
+    @apply border-cyan-300/20 bg-cyan-400/10 text-white;
+  }
+  .p-tabs {
+    @apply inline-flex rounded-full border border-white/10 bg-white/[0.04] p-1;
+  }
+  .p-tab {
+    @apply whitespace-nowrap rounded-full px-3 py-1.5 text-sm sm:px-4 text-white/60 transition hover:text-white;
+  }
+  .p-tab-active {
+    @apply bg-white/12 text-white;
+  }
+  .p-code {
+    @apply w-full rounded-2xl border border-white/15 bg-black/30 px-4 py-4 text-center font-mono text-3xl font-semibold uppercase tracking-[0.35em] text-white outline-none transition placeholder:text-white/20 focus:border-cyan-300/60 sm:text-4xl;
+  }
+  /* ações nas tabelas e listas: botões pequenos, nunca texto solto */
+  .p-action {
+    @apply inline-flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-white/12 bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-white/80 transition hover:border-white/30 hover:bg-white/[0.08] hover:text-white disabled:pointer-events-none disabled:opacity-50;
+  }
+  .p-action-accent {
+    @apply border-cyan-300/25 bg-cyan-400/10 text-cyan-100 hover:border-cyan-300/50 hover:bg-cyan-400/20;
+  }
+  .p-action-danger {
+    @apply text-white/65 hover:border-rose-300/40 hover:bg-rose-400/10 hover:text-rose-100;
+  }
+  .p-actions {
+    @apply inline-flex flex-wrap items-center justify-end gap-2;
+  }
+  /* voltar: um botão visível no topo da página */
+  .p-back {
+    @apply mb-4 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.05] py-1.5 pl-2.5 pr-4 text-sm font-medium text-white/85 transition hover:border-cyan-300/40 hover:bg-cyan-400/10 hover:text-white;
+  }
+  /* barra de filtros fixa: sem fundo próprio enquanto está no lugar; ao grudar no cabeçalho ganha o mesmo
+     fundo dele, de uma borda a outra da tela (nada de retângulo recortado em monitores largos) */
+  .p-sticky-bar {
+    @apply relative z-20 mb-6 sm:sticky sm:top-[91px];
+  }
+  .p-sticky-bar::before {
+    content: '';
+    position: absolute;
+    inset: -0.75rem 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 160ms ease;
+    background: rgb(9, 7, 24);
+    /* a sombra estende o fundo até as bordas da tela sem criar rolagem horizontal; o clip corta em cima e embaixo */
+    box-shadow: 0 0 0 100vmax rgb(9, 7, 24);
+    clip-path: inset(0 -100vmax);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .p-sticky-bar.is-stuck::before {
+    opacity: 1;
+  }
+
+  .p-link {
+    @apply font-medium text-white hover:text-cyan-200;
+  }
+}
+
+/* ---------------------------------------------------------------- formulários na identidade da plataforma */
+/* foco: borda ciano e um halo suave, sem o contorno duplo do navegador */
+.admin-input:focus,
+.admin-input:focus-visible,
+.admin-select:focus,
+.admin-select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(42, 198, 255, 0.16);
+}
+.admin-select:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* números sem as setinhas do navegador (as setas do teclado continuam funcionando) */
+input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* preenchimento automático do navegador sem o fundo branco/amarelo */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #fff;
+  caret-color: #fff;
+  box-shadow: 0 0 0 1000px #13102a inset;
+  transition: background-color 9999s ease-out;
+}
+
+/* data e hora: calendário escuro e ícone claro */
+input[type='date'],
+input[type='datetime-local'],
+input[type='time'] {
+  color-scheme: dark;
+}
+input[type='date']::-webkit-calendar-picker-indicator,
+input[type='datetime-local']::-webkit-calendar-picker-indicator,
+input[type='time']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+  filter: invert(1);
+}
+
+/* caixa de marcação e opção */
+input[type='checkbox'],
+input[type='radio'] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex-shrink: 0;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin: 0;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(0, 0, 0, 0.28) center / 0.8rem no-repeat;
+  transition:
+    background-color 150ms,
+    border-color 150ms,
+    box-shadow 150ms;
+}
+input[type='checkbox'] {
+  border-radius: 0.375rem;
+}
+input[type='radio'] {
+  border-radius: 999px;
+}
+input[type='checkbox']:hover,
+input[type='radio']:hover {
+  border-color: rgba(103, 232, 249, 0.6);
+}
+input[type='checkbox']:checked {
+  border-color: rgb(103, 232, 249);
+  background-color: rgb(34, 211, 238);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23080616' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E");
+}
+input[type='radio']:checked {
+  border-color: rgb(103, 232, 249);
+  background-color: rgba(34, 211, 238, 0.15);
+  background-image: radial-gradient(
+    circle,
+    rgb(34, 211, 238) 0 40%,
+    transparent 45%
+  );
+  background-size: 100%;
+}
+input[type='checkbox']:focus-visible,
+input[type='radio']:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(42, 198, 255, 0.25);
+}
+input[type='checkbox']:disabled,
+input[type='radio']:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+/* arquivo: o botão do navegador vira um botão da plataforma */
+input[type='file']::file-selector-button {
+  margin-right: 0.75rem;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 0.5rem 1rem;
+  color: #fff;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition:
+    background-color 150ms,
+    border-color 150ms;
+}
+input[type='file']::file-selector-button:hover {
+  border-color: rgba(103, 232, 249, 0.45);
+  background: rgba(34, 211, 238, 0.12);
+}
+
+/* texto selecionado na cor da marca */
+::selection {
+  background: rgba(34, 211, 238, 0.35);
+  color: #fff;
 }

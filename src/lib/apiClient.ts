@@ -13,6 +13,7 @@ import type {
 import { ApiError } from './apiError';
 import * as demoApi from './demoApi';
 import { isDemoMode } from './demoMode';
+import { login as platformLogin, roleFromBack } from '../plataforma/api';
 
 export { ApiError };
 
@@ -168,13 +169,24 @@ export type LoginResponse = {
   user: ApiSessionUser;
 };
 
-export function loginWithApi(email: string, password: string) {
+export async function loginWithApi(email: string, password: string): Promise<LoginResponse> {
   if (isDemoMode) return demoApi.demoLogin(email, password);
 
-  return apiRequest<LoginResponse>('/auth/login', {
-    method: 'POST',
-    body: JSON.stringify({ email, password }),
-  });
+  // API da plataforma (platform-back): perfis e empresa vêm com outros nomes
+  const { token, user, companyName } = await platformLogin(email, password);
+  return {
+    access_token: token,
+    user: {
+      id: user.id,
+      organization_id: user.company_id,
+      organization_name: companyName,
+      name: user.name,
+      email: user.email ?? (user.cpf ? `CPF ${user.cpf}` : ''),
+      role: roleFromBack[user.role],
+      status: user.active ? 'active' : 'inactive',
+      last_access_at: null,
+    },
+  } as LoginResponse;
 }
 
 export type ProfileUpdatePayload = {
