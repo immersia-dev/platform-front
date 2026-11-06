@@ -10,6 +10,7 @@ import {
 
 import { useAuth } from '../auth/useAuth';
 import { fetchPlatformSnapshot, getApiErrorMessage } from '../lib/apiClient';
+import { isDemoMode } from '../lib/demoMode';
 import { applyPlatformSnapshot, type PlatformSnapshot } from './platformSnapshot';
 
 type PlatformDataContextValue = {
@@ -28,7 +29,8 @@ export function PlatformDataProvider({ children }: PropsWithChildren) {
   const [version, setVersion] = useState(0);
 
   const refresh = useCallback(async () => {
-    if (!accessToken || !user) {
+    // fora do modo demonstração cada tela da plataforma busca seus próprios dados na API
+    if (!accessToken || !user || !isDemoMode) {
       setError('');
       setIsLoading(false);
       return;
@@ -54,7 +56,7 @@ export function PlatformDataProvider({ children }: PropsWithChildren) {
 
   const value = useMemo(
     () => ({
-      isLoading: isLoading || Boolean(accessToken && user && version === 0 && !error),
+      isLoading: isLoading || Boolean(isDemoMode && accessToken && user && version === 0 && !error),
       error,
       refresh,
       version,

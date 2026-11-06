@@ -32,6 +32,7 @@ import {
   getLearnerDetails,
   getRiskLabel,
 } from '../lib/instructorAnalytics';
+import { pluralize } from '../lib/pluralize';
 
 const PAGE_SIZE = 5;
 
@@ -229,7 +230,7 @@ export default function StudentDetails() {
                 Lista compacta para acompanhar vínculos atuais e anteriores.
               </p>
             </div>
-            <span className="chip chip-muted">{groupHistory.length} vínculos</span>
+            <span className="chip chip-muted">{pluralize(groupHistory.length, 'vínculo', 'vínculos')}</span>
           </div>
 
           <div className="max-h-[300px] overflow-auto">
@@ -270,15 +271,21 @@ export default function StudentDetails() {
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Média geral"
-          value={`${summary.averageScore}%`}
-          caption="Score médio."
+          value={attempts.length ? `${summary.averageScore}%` : '—'}
+          caption="Nota média."
           tooltip="Média das notas obtidas pelo aluno em todas as tentativas registradas."
           icon={BarChart3}
         />
 
         <StatCard
           label="Risco atual"
-          value={<span className={getRiskValueClass(summary.risk)}>{getRiskLabel(summary.risk)}</span>}
+          value={
+            attempts.length ? (
+              <span className={getRiskValueClass(summary.risk)}>{getRiskLabel(summary.risk)}</span>
+            ) : (
+              <span className="text-white/50">Sem tentativas</span>
+            )
+          }
           caption="Prioridade."
           tooltip="Classificação calculada a partir da média geral para indicar necessidade de acompanhamento."
           icon={ShieldAlert}
@@ -286,7 +293,7 @@ export default function StudentDetails() {
 
         <StatCard
           label="Aprovação"
-          value={`${summary.approvalRate}%`}
+          value={attempts.length ? `${summary.approvalRate}%` : '—'}
           caption="Aprovadas."
           tooltip="Percentual de tentativas concluídas com resultado aprovado."
           icon={CheckCircle2}
@@ -294,8 +301,8 @@ export default function StudentDetails() {
 
         <StatCard
           label="Melhor nota"
-          value={`${summary.bestScore}%`}
-          caption="Maior score."
+          value={attempts.length ? `${summary.bestScore}%` : '—'}
+          caption="Maior nota."
           tooltip="Maior nota alcançada pelo aluno até o momento."
           icon={Trophy}
         />
@@ -376,7 +383,9 @@ export default function StudentDetails() {
               </div>
               <h3 className="mt-4 text-sm font-semibold text-white">Treinamentos aprovados</h3>
               <p className="mt-2 text-sm text-white/60">
-                {summary.approvedTrainings} experiências concluídas com aproveitamento satisfatório.
+                {summary.approvedTrainings === 1
+                  ? '1 treinamento concluído com aproveitamento satisfatório.'
+                  : `${summary.approvedTrainings} treinamentos concluídos com aproveitamento satisfatório.`}
               </p>
             </div>
           </div>
@@ -395,7 +404,9 @@ export default function StudentDetails() {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-sm font-semibold text-white">{module.moduleName}</p>
-                    <p className="mt-1 text-sm text-white/55">{module.attempts} tentativas registradas</p>
+                    <p className="mt-1 text-sm text-white/55">
+                      {pluralize(module.attempts, 'tentativa registrada', 'tentativas registradas')}
+                    </p>
                   </div>
 
                   <span className="chip chip-muted">{module.averageResponseTime} min</span>
@@ -435,19 +446,19 @@ export default function StudentDetails() {
           </div>
         </div>
 
-        <div className="overflow-hidden">
-          <table className="data-table attempt-log-table">
+        <div className="overflow-x-auto">
+          <table className="data-table attempt-log-table min-w-[1180px] [&_th]:whitespace-nowrap [&_th]:tracking-[0.08em]">
             <colgroup>
-              <col className="w-[15%]" />
+              <col className="w-[17%]" />
               <col className="w-[8%]" />
               <col className="w-[12%]" />
+              <col className="w-[9%]" />
               <col className="w-[6%]" />
-              <col className="w-[7%]" />
-              <col className="w-[7%]" />
               <col className="w-[8%]" />
               <col className="w-[7%]" />
-              <col className="w-[13%]" />
-              <col className="w-[8%]" />
+              <col className="w-[6%]" />
+              <col className="w-[11%]" />
+              <col className="w-[7%]" />
               <col className="w-[9%]" />
             </colgroup>
             <thead>
@@ -455,9 +466,9 @@ export default function StudentDetails() {
                 <th>Treinamento</th>
                 <th>Módulo</th>
                 <th>Turma</th>
-                <th>Tent.</th>
+                <th>Tentativa</th>
                 <th>Nota</th>
-                <th>Acur.</th>
+                <th>Acurácia</th>
                 <th>Tempo</th>
                 <th>Erros</th>
                 <th>Data</th>

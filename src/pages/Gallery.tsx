@@ -14,11 +14,13 @@ import { Link } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
 import { useAuth } from '../auth/useAuth';
 import { modulesSeed, type ModuleRecord } from '../data/mockPlatform';
+import { isModuleComingSoon } from '../lib/studyPlatform';
 
 const TRAININGS_PER_PAGE = 3;
 
 type CatalogModule = ModuleRecord & {
   hasAccess: boolean;
+  comingSoon: boolean;
 };
 
 function formatDuration(minutes: number) {
@@ -33,6 +35,7 @@ function formatDuration(minutes: number) {
 function getCatalogModules(userOrganizationId: string | null, role: string): CatalogModule[] {
   return modulesSeed.map((module) => ({
     ...module,
+    comingSoon: isModuleComingSoon(module.id),
     hasAccess:
       role === 'super_admin' ||
       (!!userOrganizationId && module.organizationIds.includes(userOrganizationId)),
@@ -187,7 +190,11 @@ export default function Gallery() {
                         <p className="section-kicker">Módulo</p>
                         <h3 className="text-2xl font-semibold text-white">{module.name}</h3>
                         <p className="mt-2 max-w-2xl text-sm text-white/65">{module.summary}</p>
-                        {!module.hasAccess ? (
+                        {module.comingSoon ? (
+                          <p className="module-locked-text mt-3">
+                            Em breve: treinamento em desenvolvimento.
+                          </p>
+                        ) : !module.hasAccess ? (
                           <p className="module-locked-text mt-3">
                             Este módulo ainda não está liberado para a sua organização.
                           </p>
@@ -279,7 +286,11 @@ export default function Gallery() {
 
                               <div className="training-card-actions mt-6">
                                 {canViewResults ? (
-                                  module.hasAccess ? (
+                                  module.comingSoon ? (
+                                    <span className="training-results-btn training-results-btn-disabled">
+                                      Disponível em breve
+                                    </span>
+                                  ) : module.hasAccess ? (
                                     <Link
                                       to={`/app/trainings/${module.id}/${training.id}/results`}
                                       className="training-results-btn training-results-btn-active"
@@ -306,7 +317,9 @@ export default function Gallery() {
                                       window.open(training.url, '_blank', 'noopener,noreferrer');
                                     }}
                                   >
-                                    {module.hasAccess
+                                    {module.comingSoon
+                                      ? 'Disponível em breve'
+                                      : module.hasAccess
                                       ? training.enabled
                                         ? 'Iniciar treinamento'
                                         : 'Disponível em breve'
@@ -319,7 +332,9 @@ export default function Gallery() {
 
                           {!module.hasAccess ? (
                             <div className="training-card-overlay">
-                              <span className="training-card-overlay-pill">Módulo não contratado</span>
+                              <span className="training-card-overlay-pill">
+                                {module.comingSoon ? 'Em breve' : 'Módulo não contratado'}
+                              </span>
                             </div>
                           ) : null}
                         </article>

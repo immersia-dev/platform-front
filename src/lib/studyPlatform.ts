@@ -353,13 +353,52 @@ export function getNextLessonForLearner(
 
 export function getMaterialKindLabel(kind: MaterialKind) {
   if (kind === 'pdf') return 'PDF';
-  if (kind === 'video') return 'Video';
+  if (kind === 'video') return 'Vídeo';
   if (kind === 'image') return 'Imagem';
   return 'Link';
 }
 
 export function getLaunchTypeLabel(launchType: ImmersiveTrainingRecord['launchType']) {
-  return launchType === 'meta_app' ? 'App Meta' : 'Web / A-frame';
+  return launchType === 'meta_app' ? 'Meta Quest (app Immersia)' : 'Navegador (web)';
+}
+
+/**
+ * Um módulo fica "Em breve" enquanto não tiver nenhum treinamento habilitado —
+ * é assim que NR-10 e NR-33 aparecem no catálogo até o lançamento.
+ */
+export function isModuleComingSoon(moduleId: string) {
+  const module = modulesSeed.find((record) => record.id === moduleId);
+  const hasEnabledImmersive = immersiveTrainingsSeed.some(
+    (training) => training.moduleId === moduleId && training.enabled
+  );
+  const hasEnabledLegacy = module?.trainings.some((training) => training.enabled !== false) ?? false;
+
+  return !hasEnabledImmersive && !hasEnabledLegacy;
+}
+
+/** Contagens únicas do catálogo, usadas por todas as telas que resumem o catálogo. */
+export function getCatalogSummary() {
+  const comingSoonModuleIds = new Set(
+    modulesSeed.filter((module) => isModuleComingSoon(module.id)).map((module) => module.id)
+  );
+  const availableTrainings = immersiveTrainingsSeed.filter(
+    (training) => training.enabled && !comingSoonModuleIds.has(training.moduleId)
+  );
+
+  return {
+    modules: modulesSeed.length,
+    activeModules: modulesSeed.length - comingSoonModuleIds.size,
+    comingSoonModules: comingSoonModuleIds.size,
+    tracks: studyTracksSeed.length,
+    lessons: studyLessonsSeed.length,
+    trainings: immersiveTrainingsSeed.length,
+    availableTrainings: availableTrainings.length,
+    comingSoonTrainings: immersiveTrainingsSeed.length - availableTrainings.length,
+  };
+}
+
+export function getModuleTrainingCount(moduleId: string) {
+  return immersiveTrainingsSeed.filter((training) => training.moduleId === moduleId).length;
 }
 
 export function getTrainingStudyProgress(moduleId: string, legacyTrainingId: string) {

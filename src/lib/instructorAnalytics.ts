@@ -49,6 +49,7 @@ export type ModuleAnalytics = {
 };
 
 export type GroupAnalytics = {
+  hasAttempts: boolean;
   group: StudentGroupRecord;
   learners: UserRecord[];
   attempts: TrainingAttemptRecord[];
@@ -372,29 +373,148 @@ function getLearningGain(attempts: TrainingAttemptRecord[]) {
   return round(getAverage(gains));
 }
 
-function getGroupRisk(
-  averageScore: number,
-  participationRate: number,
-  learnersNeedingSupport: number
-): RiskLevel {
-  if (averageScore < 70 || participationRate < 50) return 'critical';
-  if (averageScore < 80 || participationRate < 80 || learnersNeedingSupport > 0) return 'attention';
-  return 'healthy';
+export type GroupRiskInput = {
+  /** Média das tentativas da turma; `null` quando ainda não há tentativas. */
+  averageScore: number | null;
+  totalLearners: number;
+  attemptedLearners: number;
+  /** Alunos com média abaixo da faixa saudável (< 80%). */
+  learnersNeedingSupport: number;
+  /** Alunos com média reprovatória (< 70%). */
+  failingLearners: number;
+};
+
+export type GroupRiskAssessment = {
+  risk: RiskLevel;
+  reason: string;
+};
+
+function countLabel(count: number, singular: string, plural: string) {
+  return `${count} ${count === 1 ? singular : plural}`;
 }
 
-export function getInstructorAnalytics(organizationId: string) {
+/**
+ * Regra única de risco de turma: o risco vem de média baixa, alunos reprovando
+ * e alunos que ainda não executaram nenhum treinamento (pendências). Turmas
+ * arquivadas não recebem risco — quem chama deve tratar esse caso antes.
+ */
+export function assessGroupRisk(input: GroupRiskInput): GroupRiskAssessment {
+  const pendingLearners = Math.max(input.totalLearners - input.attemptedLearners, 0);
+  const participationRate = input.totalLearners
+    ? (input.attemptedLearners / input.totalLearners) * 100
+    : 0;
+
+  if (!input.totalLearners) {
+    return { risk: 'healthy', reason: 'Turma sem alunos vinculados.' };
+  }
+
+  if (input.averageScore === null) {
+    return {
+      risk: 'attention',
+      reason: `${countLabel(pendingLearners, 'aluno ainda não executou', 'alunos ainda não executaram')} nenhum treinamento.`,
+    };
+  }
+
+  if (input.averageScore < 70) {
+    return { risk: 'critical', reason: `Média da turma abaixo de 70% (${input.averageScore}%).` };
+  }
+
+  if (input.failingLearners > 0 && input.failingLearners * 2 > input.attemptedLearners) {
+    return {
+      risk: 'critical',
+      reason: `${countLabel(input.failingLearners, 'aluno', 'alunos')} com média abaixo de 70%.`,
+    };
+  }
+
+  const reasons: string[] = [];
+  if (input.averageScore < 80) reasons.push(`média de ${input.averageScore}%`);
+  if (input.learnersNeedingSupport > 0) {
+    reasons.push(countLabel(input.learnersNeedingSupport, 'aluno em reforço', 'alunos em reforço'));
+  }
+  if (participationRate < 80 && pendingLearners > 0) {
+    reasons.push(countLabel(pendingLearners, 'aluno sem execução', 'alunos sem execução'));
+  }
+
+  if (reasons.length) {
+    const text = reasons.join(', ');
+    return { risk: 'attention', reason: `${text.charAt(0).toUpperCase()}${text.slice(1)}.` };
+  }
+
+  return { risk: 'healthy', reason: 'Média saudável e alunos em dia.' };
+}
+
+/** Avalia o risco de uma turma a partir dos alunos ativos e das tentativas dela. */
+export function assessGroupRiskFromAttempts(
+  groupLearnerIds: string[],
+  groupAttempts: TrainingAttemptRecord[]
+): GroupRiskAssessment {
+  const learnerAverages = groupLearnerIds
+    .map((learnerId) =>
+      groupAttempts
+        .filter((attempt) => attempt.learnerId === learnerId)
+        .map((attempt) => attempt.score)
+    )
+    .filter((scores) => scores.length > 0)
+    .map((scores) => getAverage(scores));
+  const scopedAttempts = groupAttempts.filter((attempt) => groupLearnerIds.includes(attempt.learnerId));
+
+  return assessGroupRisk({
+    averageScore: scopedAttempts.length
+      ? round(getAverage(scopedAttempts.map((attempt) => attempt.score)))
+      : null,
+    totalLearners: groupLearnerIds.length,
+    attemptedLearners: learnerAverages.length,
+    learnersNeedingSupport: learnerAverages.filter((average) => average < 80).length,
+    failingLearners: learnerAverages.filter((average) => average < 70).length,
+  });
+}
+
+function getGroupRisk(groupLearners: UserRecord[], groupAttempts: TrainingAttemptRecord[]): RiskLevel {
+  return assessGroupRiskFromAttempts(
+    groupLearners.map((learner) => learner.id),
+    groupAttempts
+  ).risk;
+}
+
+export type InstructorAnalyticsScope = {
+  /** Restringe a análise às turmas em que este usuário é o instrutor. */
+  instructorId?: string | null;
+};
+
+export function getInstructorAnalytics(organizationId: string, scope: InstructorAnalyticsScope = {}) {
+  const instructorId = scope.instructorId ?? null;
+  const activeGroups = studentGroupsSeed.filter(
+    (group) =>
+      group.organizationId === organizationId &&
+      group.status === 'active' &&
+      (!instructorId || group.instructorId === instructorId)
+  );
+  const activeGroupIds = new Set(activeGroups.map((group) => group.id));
+  const activeMemberships = studentGroupMembershipsSeed.filter((membership) => membership.status === 'active');
+  // Instrutor: somente alunos com vínculo ativo nas turmas em que ele é o responsável.
+  const scopedLearnerIds = instructorId
+    ? new Set(
+        activeMemberships
+          .filter((membership) => activeGroupIds.has(membership.groupId))
+          .map((membership) => membership.learnerId)
+      )
+    : null;
   const learners = usersSeed.filter(
-    (record) => record.organizationId === organizationId && record.role === 'learner'
+    (record) =>
+      record.organizationId === organizationId &&
+      record.role === 'learner' &&
+      (!scopedLearnerIds || scopedLearnerIds.has(record.id))
   );
   const learnerIds = new Set(learners.map((record) => record.id));
   const attempts = trainingAttemptsSeed
-    .filter((record) => record.organizationId === organizationId && learnerIds.has(record.learnerId))
+    .filter(
+      (record) =>
+        record.organizationId === organizationId &&
+        learnerIds.has(record.learnerId) &&
+        (!instructorId || activeGroupIds.has(record.groupId))
+    )
     .sort(sortAttemptsDesc);
   const visibleModules = modulesSeed.filter((module) => module.organizationIds.includes(organizationId));
-  const activeGroups = studentGroupsSeed.filter(
-    (group) => group.organizationId === organizationId && group.status === 'active'
-  );
-  const activeMemberships = studentGroupMembershipsSeed.filter((membership) => membership.status === 'active');
 
   const learnersWithMetrics = learners
     .map((learner) =>
@@ -454,6 +574,7 @@ export function getInstructorAnalytics(organizationId: string) {
     ).length;
 
     return {
+      hasAttempts: groupAttempts.length > 0,
       group,
       learners: groupLearners,
       attempts: groupAttempts,
@@ -467,7 +588,7 @@ export function getInstructorAnalytics(organizationId: string) {
       learningGain: getLearningGain(groupAttempts),
       latestActivity: groupAttempts[0]?.completedAt ?? null,
       trendPoints: buildTrendPoints(groupAttempts),
-      risk: getGroupRisk(averageScore, participationRate, learnersNeedingSupport),
+      risk: getGroupRisk(groupLearners, groupAttempts),
     };
   });
 
@@ -477,9 +598,14 @@ export function getInstructorAnalytics(organizationId: string) {
   const overallApprovalRate = attempts.length
     ? round((attempts.filter((attempt) => attempt.outcome === 'approved').length / attempts.length) * 100)
     : 0;
-  const classAverage = round(getAverage(learnersWithMetrics.map((item) => item.averageScore)));
+  // Média geral considera apenas alunos com tentativas: quem ainda não executou
+  // nenhum treinamento não entra como 0%. `null` quando não há tentativas.
+  const learnersWithAttempts = learnersWithMetrics.filter((item) => item.attempts.length > 0);
+  const classAverage: number | null = learnersWithAttempts.length
+    ? round(getAverage(learnersWithAttempts.map((item) => item.averageScore)))
+    : null;
   const averageResponseTime = round(getAverage(attempts.map((attempt) => attempt.responseTimeMinutes)));
-  const learnersNeedingAttention = learnersWithMetrics.filter((item) => item.risk !== 'healthy');
+  const learnersNeedingAttention = learnersWithAttempts.filter((item) => item.risk !== 'healthy');
   const learnerSpotlights: LearnerSpotlight[] = learnersWithMetrics.map((item) => ({
     learnerId: item.learner.id,
     learnerName: item.learner.name,
@@ -603,14 +729,6 @@ export function getTrainingDetails(
     const groupAttempts = attempts.filter((attempt) => attempt.groupId === group.id);
     const attemptedLearners = new Set(groupAttempts.map((attempt) => attempt.learnerId)).size;
     const averageScore = round(getAverage(groupAttempts.map((attempt) => attempt.score)));
-    const participationRate = groupLearners.length
-      ? round((attemptedLearners / groupLearners.length) * 100)
-      : 0;
-    const learnersNeedingSupport = groupLearners.filter((learner) => {
-      const learnerAttempts = groupAttempts.filter((attempt) => attempt.learnerId === learner.id);
-      if (!learnerAttempts.length) return false;
-      return getLearnerAnalytics(learner, learnerAttempts).risk !== 'healthy';
-    }).length;
 
     return {
       group,
@@ -630,7 +748,7 @@ export function getTrainingDetails(
       criticalErrors: groupAttempts.reduce((total, attempt) => total + attempt.criticalErrors, 0),
       hintsUsed: groupAttempts.reduce((total, attempt) => total + attempt.hintsUsed, 0),
       learningGain: getLearningGain(groupAttempts),
-      risk: getGroupRisk(averageScore, participationRate, learnersNeedingSupport),
+      risk: getGroupRisk(groupLearners, groupAttempts),
     };
   });
   const learnersWithResults: TrainingLearnerResult[] = learners

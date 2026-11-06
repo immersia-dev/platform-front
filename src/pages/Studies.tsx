@@ -17,8 +17,10 @@ import PageHeader from '../components/PageHeader';
 import StatCard from '../components/StatCard';
 import StudyCatalogAdmin from '../components/StudyCatalogAdmin';
 import { studyTracksSeed } from '../data/mockPlatform';
+import { pluralize } from '../lib/pluralize';
 import {
   getAssignedTracksForGroup,
+  getCatalogSummary,
   getCurrentUserRecord,
   getGroupAverageTrackProgress,
   getGroupLearners,
@@ -29,7 +31,7 @@ import {
   getNextLessonForLearner,
   getScopedGroupsForUser,
   getTrackCatalogItems,
-  getTrackLessons,
+  isModuleComingSoon,
   type TrackCatalogItem,
 } from '../lib/studyPlatform';
 import { useLessonProgress } from '../study/useLessonProgress';
@@ -43,7 +45,7 @@ function formatDuration(minutes: number) {
 }
 
 function getProgressLabel(percent: number) {
-  if (percent === 100) return 'Concluida';
+  if (percent === 100) return 'Concluída';
   if (percent > 0) return 'Em andamento';
   return 'Pendente';
 }
@@ -114,15 +116,15 @@ export default function Studies() {
           <StatCard
             label="Progresso"
             value={`${averageProgress}%`}
-            caption="Media da sua jornada."
-            tooltip="Percentual medio de aulas obrigatorias concluidas nas trilhas atribuidas."
+            caption="Média da sua jornada."
+            tooltip="Percentual médio de aulas obrigatórias concluídas nas trilhas atribuídas."
             icon={GraduationCap}
           />
           <StatCard
-            label="Concluidas"
+            label="Concluídas"
             value={`${completedTracks}`}
             caption="Trilhas finalizadas."
-            tooltip="Trilhas em que todas as aulas obrigatorias foram concluidas."
+            tooltip="Trilhas em que todas as aulas obrigatórias foram concluídas."
             icon={CheckCircle2}
           />
         </section>
@@ -143,7 +145,7 @@ export default function Studies() {
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 className="gallery-filter-input"
-                placeholder="Buscar trilha ou modulo"
+                placeholder="Buscar trilha ou módulo"
               />
             </div>
           </div>
@@ -197,10 +199,14 @@ export default function Studies() {
                     </div>
 
                     <div className="mt-4 flex flex-wrap gap-3 text-xs font-medium uppercase tracking-[0.14em] text-white/45">
-                      <span>{progressPercent}% concluido</span>
-                      <span>{item.lessons.length} aulas</span>
-                      {nextLesson ? <span>Proxima: {nextLesson.title}</span> : null}
+                      <span>{progressPercent}% concluído</span>
+                      <span>{pluralize(item.lessons.length, 'aula', 'aulas')}</span>
                     </div>
+                    {nextLesson && progressPercent < 100 ? (
+                      <p className="mt-3 text-sm text-white/60">
+                        Próxima aula: <span className="font-medium text-white/85">{nextLesson.title}</span>
+                      </p>
+                    ) : null}
 
                     <Link to={`/app/studies/${item.track.id}`} className="primary-btn mt-6">
                       <Play className="h-4 w-4" />
@@ -224,61 +230,61 @@ export default function Studies() {
   }
 
   if (user.role === 'super_admin') {
-    const catalogItems = getTrackCatalogItems(studyTracksSeed).filter((item) =>
-      trackMatchesSearch(item, deferredSearch)
-    );
-    const totalLessons = studyTracksSeed.reduce(
-      (total, track) => total + getTrackLessons(track.id).length,
-      0
-    );
-    const totalTrainings = catalogItems.reduce((total, item) => total + item.trainingCount, 0);
-    const moduleCount = new Set(catalogItems.map((item) => item.module.id)).size;
+    // Trilhas disponíveis primeiro; módulos "Em breve" no fim do catálogo.
+    const catalogItems = getTrackCatalogItems(studyTracksSeed)
+      .filter((item) => trackMatchesSearch(item, deferredSearch))
+      .sort(
+        (left, right) =>
+          Number(isModuleComingSoon(left.module.id)) - Number(isModuleComingSoon(right.module.id))
+      );
+    // Mesmas contagens exibidas no painel do super admin (fonte única do catálogo).
+    const catalog = getCatalogSummary();
 
     return (
       <div className="space-y-8">
         <PageHeader
           title="Estudos"
-          description="Catalogo de modulos, trilhas, materiais e treinamentos da plataforma."
+          description="Catálogo de módulos, trilhas, materiais e treinamentos da plataforma."
         />
 
         <StudyCatalogAdmin />
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <StatCard
-            label="Modulos"
-            value={`${moduleCount}`}
-            caption="Agrupadores contrataveis."
-            tooltip="Modulos do catalogo que podem ser liberados para organizacoes."
+            label="Módulos"
+            value={`${catalog.modules}`}
+            caption={`${pluralize(catalog.activeModules, 'ativo', 'ativos')} · ${catalog.comingSoonModules} em breve`}
+            tooltip="Módulos do catálogo que podem ser liberados para organizações."
             icon={Layers3}
           />
           <StatCard
             label="Trilhas"
-            value={`${catalogItems.length}`}
+            value={`${catalog.tracks}`}
             caption="Jornadas de estudo."
-            tooltip="Trilhas criadas dentro dos modulos da plataforma."
+            tooltip="Trilhas criadas dentro dos módulos da plataforma."
             icon={BookOpenCheck}
           />
           <StatCard
             label="Aulas"
-            value={`${totalLessons}`}
-            caption="Materiais e praticas."
-            tooltip="Aulas obrigatorias ou praticas que compoem as trilhas."
+            value={`${catalog.lessons}`}
+            caption="Materiais e práticas."
+            tooltip="Aulas obrigatórias ou práticas que compõem as trilhas."
             icon={FileText}
           />
           <StatCard
-            label="Treinamentos"
-            value={`${totalTrainings}`}
-            caption="Web e Meta."
-            tooltip="Atividades imersivas com canal de execucao definido no treinamento."
+            label="Treinamentos VR"
+            value={`${catalog.trainings}`}
+            caption={`${pluralize(catalog.availableTrainings, 'disponível', 'disponíveis')} · ${catalog.comingSoonTrainings} em breve`}
+            tooltip="Treinamentos imersivos do catálogo, os mesmos contados no painel."
             icon={Play}
           />
         </section>
 
         <section className="gallery-toolbar-shell">
           <div>
-            <h2 className="text-lg font-semibold text-white">Catalogo de estudos</h2>
+            <h2 className="text-lg font-semibold text-white">Catálogo de estudos</h2>
             <p className="mt-2 text-sm text-white/60">
-              Exibindo {catalogItems.length} trilhas disponiveis para curadoria.
+              {`Exibindo ${catalogItems.length} de ${pluralize(catalog.tracks, 'trilha', 'trilhas')} do catálogo.`}
             </p>
           </div>
           <div className="gallery-toolbar-controls">
@@ -289,7 +295,7 @@ export default function Studies() {
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 className="gallery-filter-input"
-                placeholder="Buscar por modulo ou trilha"
+                placeholder="Buscar por módulo ou trilha"
               />
             </div>
           </div>
@@ -299,7 +305,14 @@ export default function Studies() {
           {catalogItems.map((item) => (
             <article key={item.track.id} className="card-training">
               <div className="p-6">
-                <p className="section-kicker">{item.module.name}</p>
+                <div className="flex items-start justify-between gap-3">
+                  <p className="section-kicker">{item.module.name}</p>
+                  {isModuleComingSoon(item.module.id) ? (
+                    <span className="status-pill status-pill-muted">Em breve</span>
+                  ) : (
+                    <span className="status-pill status-pill-success">Disponível</span>
+                  )}
+                </div>
                 <h3 className="mt-3 text-xl font-semibold text-white">{item.track.title}</h3>
                 <p className="mt-3 text-sm leading-6 text-white/65">{item.track.summary}</p>
 
@@ -313,7 +326,7 @@ export default function Studies() {
                     <strong className="analytics-mini-value">{item.materialCount}</strong>
                   </div>
                   <div className="analytics-mini-metric">
-                    <span className="analytics-mini-label">Praticas</span>
+                    <span className="analytics-mini-label">Práticas</span>
                     <strong className="analytics-mini-value">{item.trainingCount}</strong>
                   </div>
                 </div>
@@ -360,8 +373,8 @@ export default function Studies() {
         title="Estudos"
         description={
           user.role === 'instructor'
-            ? 'Trilhas encaminhadas para suas turmas atribuidas.'
-            : 'Trilhas encaminhadas para as turmas da organizacao.'
+            ? 'Trilhas encaminhadas para as suas turmas.'
+            : 'Trilhas encaminhadas para as turmas da organização.'
         }
       />
 
@@ -377,14 +390,14 @@ export default function Studies() {
           label="Trilhas"
           value={`${assignedTrackCount}`}
           caption="Encaminhadas."
-          tooltip="Total de trilhas encaminhadas para as turmas visiveis."
+          tooltip="Total de trilhas encaminhadas para as turmas visíveis."
           icon={BookOpenCheck}
         />
         <StatCard
           label="Progresso"
           value={`${averageProgress}%`}
-          caption="Media por turma."
-          tooltip="Media de conclusao das trilhas encaminhadas para as turmas visiveis."
+          caption="Média por turma."
+          tooltip="Média de conclusão das trilhas encaminhadas para as turmas visíveis."
           icon={GraduationCap}
         />
       </section>
@@ -393,7 +406,7 @@ export default function Studies() {
         <div>
           <h2 className="text-lg font-semibold text-white">Trilhas por turma</h2>
           <p className="mt-2 text-sm text-white/60">
-            Acompanhe progresso, pendencias e atalhos para cada jornada encaminhada.
+            Acompanhe progresso, pendências e atalhos para cada jornada encaminhada.
           </p>
         </div>
         <div className="gallery-toolbar-controls">
@@ -452,15 +465,15 @@ export default function Studies() {
                           <strong className="analytics-mini-value">{progress.learners.length}</strong>
                         </div>
                         <div className="analytics-mini-metric">
-                          <span className="analytics-mini-label">Concl.</span>
+                          <span className="analytics-mini-label">Concluíram</span>
                           <strong className="analytics-mini-value">{progress.completedLearners}</strong>
                         </div>
                         <div className="analytics-mini-metric">
-                          <span className="analytics-mini-label">Andam.</span>
+                          <span className="analytics-mini-label">Cursando</span>
                           <strong className="analytics-mini-value">{progress.inProgressLearners}</strong>
                         </div>
                         <div className="analytics-mini-metric">
-                          <span className="analytics-mini-label">Pend.</span>
+                          <span className="analytics-mini-label">Pendentes</span>
                           <strong className="analytics-mini-value">{progress.pendingLearners}</strong>
                         </div>
                       </div>
@@ -487,7 +500,7 @@ export default function Studies() {
           <section className="empty-state">
             <h3 className="text-xl font-semibold text-white">Nenhuma turma encontrada</h3>
             <p className="mt-3 max-w-xl text-sm text-white/65">
-              Ajuste a busca ou confira se existem turmas atribuidas ao seu perfil.
+              Ajuste a busca ou confira se existem turmas atribuídas ao seu perfil.
             </p>
           </section>
         ) : null}

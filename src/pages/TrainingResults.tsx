@@ -27,6 +27,7 @@ import {
   formatDateTime,
   getTrainingDetails,
 } from '../lib/instructorAnalytics';
+import { pluralize } from '../lib/pluralize';
 import { getTrainingStudyProgress } from '../lib/studyPlatform';
 
 const STUDENTS_PAGE_SIZE = 6;
@@ -219,20 +220,20 @@ export default function TrainingResults() {
         <StatCard
           label="Participação"
           value={`${completionRate}%`}
-          caption={`${details.attemptedLearners}/${details.totalLearners} alunos`}
+          caption={`${details.attemptedLearners}/${pluralize(details.totalLearners, 'aluno', 'alunos')}`}
           tooltip="Percentual de alunos da organização que possuem pelo menos uma tentativa neste treinamento."
           icon={Activity}
         />
         <StatCard
           label="Média"
-          value={`${details.averageScore}%`}
-          caption="Score médio."
+          value={details.attempts.length ? `${details.averageScore}%` : '—'}
+          caption="Nota média."
           tooltip="Média das notas registradas em todas as tentativas deste treinamento."
           icon={BarChart3}
         />
         <StatCard
           label="Aprovação"
-          value={`${details.approvalRate}%`}
+          value={details.attempts.length ? `${details.approvalRate}%` : '—'}
           caption="Tentativas aprovadas."
           tooltip="Percentual de tentativas concluídas com resultado aprovado."
           icon={CheckCircle2}
@@ -240,7 +241,7 @@ export default function TrainingResults() {
         <StatCard
           label="Progresso"
           value={`${studyProgress.averageProgress}%`}
-          caption={`${studyProgress.completedLearners}/${studyProgress.totalLearners} alunos`}
+          caption={`${studyProgress.completedLearners}/${pluralize(studyProgress.totalLearners, 'aluno', 'alunos')}`}
           tooltip="Progresso médio nas trilhas de estudo que incluem este treinamento."
           icon={BookOpenCheck}
         />
@@ -308,7 +309,9 @@ export default function TrainingResults() {
                     Média diária das notas registradas para este treinamento.
                   </p>
                 </div>
-                <span className="chip chip-muted">{details.attempts.length} execuções</span>
+                <span className="chip chip-muted">
+                  {pluralize(details.attempts.length, 'execução', 'execuções')}
+                </span>
               </div>
 
               <div className="mt-8">
@@ -316,7 +319,7 @@ export default function TrainingResults() {
                   points={details.trendPoints.map((point) => ({
                     label: point.label,
                     value: point.averageScore,
-                    note: `${point.attempts} execuções`,
+                    note: pluralize(point.attempts, 'execução', 'execuções'),
                   }))}
                   valueSuffix="%"
                 />
@@ -326,7 +329,7 @@ export default function TrainingResults() {
 
             <article className="admin-card">
               <p className="section-kicker">Distribuição</p>
-              <h2 className="mt-3 text-2xl font-semibold text-white">Faixas de score</h2>
+              <h2 className="mt-3 text-2xl font-semibold text-white">Faixas de nota</h2>
               <p className="mt-2 text-sm text-white/60">
                 Concentração das tentativas por faixa de desempenho.
               </p>
@@ -406,7 +409,9 @@ export default function TrainingResults() {
                     </div>
                     <div className="analytics-mini-metric">
                       <span className="analytics-mini-label">Média</span>
-                      <strong className="analytics-mini-value">{item.averageScore}%</strong>
+                      <strong className="analytics-mini-value">
+                        {item.attempts.length ? `${item.averageScore}%` : '—'}
+                      </strong>
                     </div>
                     <div className="analytics-mini-metric">
                       <span className="analytics-mini-label">Aprendizado</span>
@@ -422,10 +427,10 @@ export default function TrainingResults() {
                   </div>
 
                   <div className="mt-5 flex flex-wrap gap-3 text-xs font-medium uppercase tracking-[0.14em] text-white/45">
-                    <span>{item.attempts.length} execuções</span>
-                    <span>{item.pendingLearners} pendentes</span>
-                    <span>{item.hintsUsed} dicas usadas</span>
-                    <span>{item.averageResponseTime} min médio</span>
+                    <span>{pluralize(item.attempts.length, 'execução', 'execuções')}</span>
+                    <span>{pluralize(item.pendingLearners, 'pendente', 'pendentes')}</span>
+                    <span>{pluralize(item.hintsUsed, 'dica usada', 'dicas usadas')}</span>
+                    <span>{item.averageResponseTime} min em média</span>
                   </div>
                 </article>
               ))}
@@ -445,15 +450,15 @@ export default function TrainingResults() {
             </div>
           </div>
 
-          <div className="overflow-hidden">
-            <table className="data-table attempt-log-table">
+          <div className="overflow-x-auto">
+            <table className="data-table attempt-log-table min-w-[1080px] [&_th]:whitespace-nowrap [&_th]:tracking-[0.08em]">
               <thead>
                 <tr>
                   <th>Aluno</th>
                   <th>Status</th>
-                  <th>Tent.</th>
+                  <th>Tentativas</th>
                   <th>Média</th>
-                  <th>Acur.</th>
+                  <th>Acurácia</th>
                   <th>Melhor</th>
                   <th>Tempo</th>
                   <th>Última</th>
@@ -473,10 +478,10 @@ export default function TrainingResults() {
                       </span>
                     </td>
                     <td>{item.attempts.length}</td>
-                    <td>{item.averageScore ? `${item.averageScore}%` : '-'}</td>
-                    <td>{item.averageAccuracy ? `${item.averageAccuracy}%` : '-'}</td>
-                    <td>{item.bestScore ? `${item.bestScore}%` : '-'}</td>
-                    <td>{item.averageResponseTime ? `${item.averageResponseTime} min` : '-'}</td>
+                    <td>{item.attempts.length ? `${item.averageScore}%` : '—'}</td>
+                    <td>{item.attempts.length ? `${item.averageAccuracy}%` : '—'}</td>
+                    <td>{item.attempts.length ? `${item.bestScore}%` : '—'}</td>
+                    <td>{item.attempts.length ? `${item.averageResponseTime} min` : '—'}</td>
                     <td>{formatDateTime(item.latestAttempt?.completedAt ?? null)}</td>
                     <td>
                       <Link to={`/app/students/${item.learner.id}`} className="table-action-button">
@@ -514,8 +519,8 @@ export default function TrainingResults() {
             </div>
           </div>
 
-          <div className="overflow-hidden">
-            <table className="data-table attempt-log-table">
+          <div className="overflow-x-auto">
+            <table className="data-table attempt-log-table min-w-[1080px] [&_th]:whitespace-nowrap [&_th]:tracking-[0.08em]">
               <colgroup>
                 <col className="w-[14%]" />
                 <col className="w-[16%]" />
@@ -554,8 +559,12 @@ export default function TrainingResults() {
                     </td>
                     <td>{item.attempt.responseTimeMinutes} min</td>
                     <td>
-                      <span className="block">{item.attempt.criticalErrors} erros</span>
-                      <span className="mt-1 block text-xs text-white/45">{item.attempt.hintsUsed} dicas</span>
+                      <span className="block">
+                        {pluralize(item.attempt.criticalErrors, 'erro', 'erros')}
+                      </span>
+                      <span className="mt-1 block text-xs text-white/45">
+                        {pluralize(item.attempt.hintsUsed, 'dica', 'dicas')}
+                      </span>
                     </td>
                     <td className="whitespace-nowrap">{formatCompactDateTime(item.attempt.completedAt)}</td>
                     <td>

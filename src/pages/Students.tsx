@@ -35,11 +35,31 @@ export default function Students() {
   const [groupFilter, setGroupFilter] = useState('all');
   const [page, setPage] = useState(1);
   const organizationId = user?.organizationId ?? null;
+  const currentUserRecord = usersSeed.find(
+    (record) => record.email === user?.email && record.organizationId === organizationId
+  );
+  const isInstructor = user?.role === 'instructor';
+  // Instrutor acompanha apenas as próprias turmas e os alunos vinculados a elas.
   const organizationGroups = studentGroupsSeed.filter(
-    (group) => group.organizationId === organizationId && group.status === 'active'
+    (group) =>
+      group.organizationId === organizationId &&
+      group.status === 'active' &&
+      (!isInstructor || group.instructorId === currentUserRecord?.id)
+  );
+  const scopedLearnerIds = new Set(
+    studentGroupMembershipsSeed
+      .filter(
+        (membership) =>
+          membership.status === 'active' &&
+          organizationGroups.some((group) => group.id === membership.groupId)
+      )
+      .map((membership) => membership.learnerId)
   );
   const learners = usersSeed.filter(
-    (record) => record.organizationId === organizationId && record.role === 'learner'
+    (record) =>
+      record.organizationId === organizationId &&
+      record.role === 'learner' &&
+      (!isInstructor || scopedLearnerIds.has(record.id))
   );
   const groupOptions = [
     { value: 'all', label: 'Todas as turmas' },
@@ -115,8 +135,11 @@ export default function Students() {
           <div>
             <h2 className="text-lg font-semibold text-white">Alunos cadastrados</h2>
             <p className="mt-1 text-sm text-white/60">
-              Exibindo {filteredRows.length} de {learnerRows.length} alunos em{' '}
-              {organizationGroups.length} turmas ativas.
+              {`Exibindo ${filteredRows.length} de ${learnerRows.length} ${
+                learnerRows.length === 1 ? 'aluno' : 'alunos'
+              } em ${organizationGroups.length} ${
+                organizationGroups.length === 1 ? 'turma ativa' : 'turmas ativas'
+              }.`}
             </p>
           </div>
 

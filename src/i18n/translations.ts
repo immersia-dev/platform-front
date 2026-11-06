@@ -139,7 +139,7 @@ const enUS: Record<string, string> = {
   'Arquivada': 'Archived',
   'Concluída': 'Completed',
   'Transferida': 'Transferred',
-  'Onboarding': 'Onboarding',
+  'Em implantação': 'Onboarding',
   'Aprovado': 'Approved',
   'Aprovada': 'Approved',
   'Pendente': 'Pending',
@@ -297,10 +297,10 @@ const enUS: Record<string, string> = {
   'Acurácia': 'Accuracy',
   'Erros críticos': 'Critical errors',
   'Dicas usadas': 'Hints used',
-  'Score médio.': 'Average score.',
+  'Nota média.': 'Average score.',
   'Por execução.': 'Per execution.',
   'Aprovadas.': 'Approved.',
-  'Maior score.': 'Highest score.',
+  'Maior nota.': 'Highest score.',
   'Prioridade.': 'Priority.',
 
   'Dados do aluno': 'Student data',
@@ -340,8 +340,8 @@ const enUS: Record<string, string> = {
   'Gerenciar organizações': 'Manage organizations',
   'Abrir organizações': 'Open organizations',
   'Painel Immersia': 'Immersia dashboard',
-  'Dashboard de aprendizagem': 'Learning dashboard',
-  'Visão consolidada da turma, com participação, desempenho e sinais de reforço.':
+  'Painel de aprendizagem': 'Learning dashboard',
+  'Visão consolidada das suas turmas, com participação, desempenho e sinais de reforço.':
     'Consolidated group view with participation, performance, and reinforcement signals.',
   'Visão administrativa da operação: organizações clientes, admins, usuários e liberação de módulos.':
     'Administrative view of the operation: client organizations, admins, users, and module access.',
@@ -526,6 +526,41 @@ const enUS: Record<string, string> = {
     'Practice the expected operational sequence for the first minutes of the event.',
   'Revise a lógica de evacuação e conduza a saída com segurança até o ponto de encontro.':
     'Review evacuation logic and lead a safe exit to the assembly point.',
+
+  'Análise de aprendizagem': 'Learning analytics',
+  'Evolução das pendências': 'Pending executions trend',
+  'Sem execuções suficientes para calcular a evolução das pendências.': 'Not enough executions to chart pending items.',
+  'Nota consolidada.': 'Consolidated score.',
+  'Concentração das tentativas por faixa de nota.': 'Attempts by score range.',
+  'Faixas de nota': 'Score ranges',
+  'Em breve': 'Coming soon',
+  'Disponível': 'Available',
+  'Sem turmas': 'No groups',
+  'Turma arquivada': 'Archived group',
+  'Sem média': 'No average',
+  'Sem tentativas': 'No attempts',
+  'Em breve: treinamento em desenvolvimento.': 'Coming soon: training in development.',
+  'Treinamento em desenvolvimento, disponível em breve.': 'Training in development, coming soon.',
+  'Abrir no Meta Quest': 'Open on Meta Quest',
+  'Meta Quest (app Immersia)': 'Meta Quest (Immersia app)',
+  'Navegador (web)': 'Browser (web)',
+  'Link de abertura': 'Launch link',
+  'Identificador (gerado do título)': 'Identifier (generated from the title)',
+  'Execução': 'Execution',
+  'Treinamentos VR': 'VR trainings',
+  'Alunos das suas turmas ativas.': 'Students in your active groups.',
+  'Turmas ativas em que você é o instrutor responsável.': 'Active groups where you are the instructor in charge.',
+  'Alunos com vínculo ativo nas suas turmas.': 'Students actively enrolled in your groups.',
+  'Incêndio classe A: escolha e uso do extintor': 'Class A fire: choosing and using the extinguisher',
+  'Prevenção e combate a incêndio: resposta inicial a incêndio classe A e uso correto do extintor (NR-23 / NBR 12693).': 'Fire prevention and firefighting: initial response to class A fires and correct extinguisher use (NR-23 / NBR 12693).',
+  'Segurança em instalações e serviços com eletricidade. Treinamento em desenvolvimento.': 'Safety in electrical installations and services. Training in development.',
+  'Segurança e saúde nos trabalhos em espaços confinados. Treinamento em desenvolvimento.': 'Health and safety in confined spaces. Training in development.',
+  'Entrada segura em espaço confinado': 'Safe confined space entry',
+  'Resposta inicial a princípio de incêndio': 'Initial response to an incipient fire',
+  'Abandono de área e rotas de fuga': 'Area evacuation and escape routes',
+  'Fundamentos de segurança elétrica': 'Electrical safety fundamentals',
+  'Leitura de risco elétrico em campo': 'Reading electrical risk in the field',
+  'Entrada e permanência em espaço confinado': 'Confined space entry and stay',
 };
 
 const es: Record<string, string> = {
@@ -636,7 +671,7 @@ const es: Record<string, string> = {
   'Arquivada': 'Archivada',
   'Concluída': 'Concluida',
   'Transferida': 'Transferida',
-  'Onboarding': 'Onboarding',
+  'Em implantação': 'En implantación',
   'Aprovado': 'Aprobado',
   'Aprovada': 'Aprobada',
   'Pendente': 'Pendiente',
@@ -794,10 +829,10 @@ const es: Record<string, string> = {
   'Acurácia': 'Precisión',
   'Erros críticos': 'Errores críticos',
   'Dicas usadas': 'Pistas usadas',
-  'Score médio.': 'Puntuación promedio.',
+  'Nota média.': 'Puntuación promedio.',
   'Por execução.': 'Por ejecución.',
   'Aprovadas.': 'Aprobadas.',
-  'Maior score.': 'Mayor puntuación.',
+  'Maior nota.': 'Mayor puntuación.',
   'Prioridade.': 'Prioridad.',
 
   'Dados do aluno': 'Datos del alumno',
@@ -837,8 +872,8 @@ const es: Record<string, string> = {
   'Gerenciar organizações': 'Gestionar organizaciones',
   'Abrir organizações': 'Abrir organizaciones',
   'Painel Immersia': 'Panel Immersia',
-  'Dashboard de aprendizagem': 'Dashboard de aprendizaje',
-  'Visão consolidada da turma, com participação, desempenho e sinais de reforço.':
+  'Painel de aprendizagem': 'Panel de aprendizaje',
+  'Visão consolidada das suas turmas, com participação, desempenho e sinais de reforço.':
     'Vista consolidada del grupo, con participación, desempeño y señales de refuerzo.',
   'Visão administrativa da operação: organizações clientes, admins, usuários e liberação de módulos.':
     'Vista administrativa de la operación: organizaciones cliente, admins, usuarios y habilitación de módulos.',
@@ -1023,6 +1058,41 @@ const es: Record<string, string> = {
     'Practica la secuencia operativa esperada para los primeros minutos del incidente.',
   'Revise a lógica de evacuação e conduza a saída com segurança até o ponto de encontro.':
     'Revisa la lógica de evacuación y conduce la salida con seguridad hasta el punto de encuentro.',
+
+  'Análise de aprendizagem': 'Análisis de aprendizaje',
+  'Evolução das pendências': 'Evolución de pendientes',
+  'Sem execuções suficientes para calcular a evolução das pendências.': 'Sin ejecuciones suficientes para calcular la evolución de pendientes.',
+  'Nota consolidada.': 'Puntuación consolidada.',
+  'Concentração das tentativas por faixa de nota.': 'Concentración de intentos por rango de puntuación.',
+  'Faixas de nota': 'Rangos de puntuación',
+  'Em breve': 'Próximamente',
+  'Disponível': 'Disponible',
+  'Sem turmas': 'Sin grupos',
+  'Turma arquivada': 'Grupo archivado',
+  'Sem média': 'Sin promedio',
+  'Sem tentativas': 'Sin intentos',
+  'Em breve: treinamento em desenvolvimento.': 'Próximamente: entrenamiento en desarrollo.',
+  'Treinamento em desenvolvimento, disponível em breve.': 'Entrenamiento en desarrollo, disponible próximamente.',
+  'Abrir no Meta Quest': 'Abrir en Meta Quest',
+  'Meta Quest (app Immersia)': 'Meta Quest (app Immersia)',
+  'Navegador (web)': 'Navegador (web)',
+  'Link de abertura': 'Enlace de apertura',
+  'Identificador (gerado do título)': 'Identificador (generado del título)',
+  'Execução': 'Ejecución',
+  'Treinamentos VR': 'Entrenamientos VR',
+  'Alunos das suas turmas ativas.': 'Alumnos de tus grupos activos.',
+  'Turmas ativas em que você é o instrutor responsável.': 'Grupos activos en los que eres el instructor responsable.',
+  'Alunos com vínculo ativo nas suas turmas.': 'Alumnos con vínculo activo en tus grupos.',
+  'Incêndio classe A: escolha e uso do extintor': 'Incendio clase A: elección y uso del extintor',
+  'Prevenção e combate a incêndio: resposta inicial a incêndio classe A e uso correto do extintor (NR-23 / NBR 12693).': 'Prevención y combate de incendios: respuesta inicial a incendios clase A y uso correcto del extintor (NR-23 / NBR 12693).',
+  'Segurança em instalações e serviços com eletricidade. Treinamento em desenvolvimento.': 'Seguridad en instalaciones y servicios con electricidad. Entrenamiento en desarrollo.',
+  'Segurança e saúde nos trabalhos em espaços confinados. Treinamento em desenvolvimento.': 'Seguridad y salud en trabajos en espacios confinados. Entrenamiento en desarrollo.',
+  'Entrada segura em espaço confinado': 'Entrada segura en espacio confinado',
+  'Resposta inicial a princípio de incêndio': 'Respuesta inicial a un principio de incendio',
+  'Abandono de área e rotas de fuga': 'Abandono de área y rutas de escape',
+  'Fundamentos de segurança elétrica': 'Fundamentos de seguridad eléctrica',
+  'Leitura de risco elétrico em campo': 'Lectura de riesgo eléctrico en campo',
+  'Entrada e permanência em espaço confinado': 'Entrada y permanencia en espacio confinado',
 };
 
 const dictionaries: Record<Exclude<Locale, 'pt-BR'>, Record<string, string>> = {
@@ -1061,7 +1131,7 @@ function translateDynamicCopy(source: string, locale: Exclude<Locale, 'pt-BR'>) 
   }
 
   const studentsByGroupsMatch = source.match(
-    /^Exibindo\s+(.+)\s+de\s+(.+)\s+alunos\s+em\s+(.+)\s+turmas\s+ativas\.$/
+    /^Exibindo\s+(.+)\s+de\s+(.+)\s+alunos?\s+em\s+(.+)\s+turmas?\s+ativas?\.$/
   );
   if (studentsByGroupsMatch) {
     const [, filtered, total, groups] = studentsByGroupsMatch;
