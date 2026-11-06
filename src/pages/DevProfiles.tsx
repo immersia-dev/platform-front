@@ -19,8 +19,17 @@ import {
   type UserRecord,
 } from '../data/mockPlatform';
 import { areDevProfilesEnabled } from '../lib/devProfiles';
+import { DEMO_PASSWORD as DEMO_MODE_PASSWORD, isDemoMode } from '../lib/demoMode';
 
-const DEMO_PASSWORD = '123456789';
+// contra a API real, os perfis de desenvolvimento usam as contas do seed demo do platform-back
+const API_DEMO_PASSWORD = 'Demo-Immersia-2026!';
+const apiDemoEmails: Record<AppRole, string> = {
+  super_admin: 'admin@example.com',
+  org_admin: 'company.admin@example.com',
+  instructor: 'instructor@example.com',
+  learner: 'student@example.com',
+};
+const DEMO_PASSWORD = isDemoMode ? DEMO_MODE_PASSWORD : API_DEMO_PASSWORD;
 
 type DebugProfile = {
   slug: string;
@@ -35,33 +44,34 @@ const debugProfiles: DebugProfile[] = [
     slug: 'super-admin',
     role: 'super_admin',
     title: 'Super Admin',
-    description: 'Catalogo, organizacoes e resultados globais.',
+    description: 'Catálogo, empresas e resultados de toda a plataforma.',
     icon: ShieldCheck,
   },
   {
     slug: 'org-admin',
     role: 'org_admin',
-    title: 'Admin da organizacao',
-    description: 'Usuarios, turmas e resultados da organizacao.',
+    title: 'Gestor da empresa',
+    description: 'Usuários, turmas e conformidade da empresa.',
     icon: Building2,
   },
   {
     slug: 'instructor',
     role: 'instructor',
     title: 'Instrutor',
-    description: 'Turmas atribuidas, trilhas e alunos acompanhados.',
+    description: 'Suas turmas, sessões VR e resultados dos alunos.',
     icon: UserCog,
   },
   {
     slug: 'learner',
     role: 'learner',
     title: 'Aluno',
-    description: 'Trilhas encaminhadas, aulas e progresso individual.',
+    description: 'Cursos, etapas, progresso e certificados.',
     icon: GraduationCap,
   },
 ];
 
 function getDebugUser(role: AppRole): UserRecord | null {
+  if (!isDemoMode) return { name: roleLabels[role], email: apiDemoEmails[role], role, status: 'active' } as UserRecord;
   return usersSeed.find((user) => user.role === role && user.status === 'active') ?? null;
 }
 
