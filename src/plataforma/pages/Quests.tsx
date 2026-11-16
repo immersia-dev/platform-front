@@ -23,6 +23,8 @@ function QuestState({ quest }: { quest: Quest }) {
         Em uso
       </span>
     );
+  if (quest.busy === false && quest.online === false)
+    return <span className="status-pill text-white/50">Sem conexão</span>;
   if (quest.busy === false)
     return <span className="status-pill status-pill-success">Livre</span>;
   return <span className="text-white/40">—</span>;
@@ -144,9 +146,10 @@ export default function Quests() {
         )}
       </Card>
       <p className="mt-3 text-xs text-white/40">
-        O código de treinamento de um Quest vinculado só funciona nesta
-        organização. No próprio óculos, Configurações › Desvincular também tira
-        o Quest daqui.
+        Um Quest vinculado recebe os treinamentos desta organização direto da
+        plataforma, sem código: escolha-o em Iniciar treinamento. O nome
+        aparece no painel do óculos. No próprio óculos, Configurações ›
+        Desvincular também tira o Quest daqui.
       </p>
 
       <Dialog

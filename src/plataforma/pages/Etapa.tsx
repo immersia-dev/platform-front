@@ -209,7 +209,7 @@ export default function Etapa() {
                     )}
                     {item?.best_score != null
                       ? ` · sua melhor nota é ${formatScore(item.best_score)} em ${plural(item.attempts, 'tentativa', 'tentativas')}`
-                      : ' · coloque o Quest e digite o código que aparece no painel'}
+                      : ' · escolha o Quest em Iniciar treinamento e confirme no óculos'}
                   </p>
                 </div>
                 <Link

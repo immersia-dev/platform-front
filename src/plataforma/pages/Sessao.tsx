@@ -81,6 +81,7 @@ export default function Sessao() {
   const { requestId = '' } = useParams();
   const { user } = useAuth();
   const [action, setAction] = useState('');
+  const [confirming, setConfirming] = useState(false);
   const vr = useLoad(
     () => api<VrRequest>(`/vr-requests/${requestId}?refresh=true`),
     [requestId],
@@ -104,11 +105,14 @@ export default function Sessao() {
   const criterion = lesson.data
     ? criterionText(lesson.data.passing_score, lesson.data.max_critical_errors)
     : undefined;
+  // pending or running: the Quest goes back to the lobby (running: the attempt in progress does not count)
   const canCancel =
-    r.status === 'pending' && (!learner || r.requested_by === user?.id);
+    (r.status === 'pending' || r.status === 'running') &&
+    (!learner || r.requested_by === user?.id);
 
   async function cancel() {
     setAction('');
+    setConfirming(false);
     try {
       vr.setData(await post<VrRequest>(`/vr-requests/${r.id}/cancel`));
     } catch (caught) {
@@ -166,13 +170,47 @@ export default function Sessao() {
           </div>
         </Card>
       ) : null}
-      {r.status === 'running' && !r.attempts ? (
-        <div className="mb-5">
-          <Notice>
-            Treinamento em andamento. O resultado aparece aqui ao final de cada
-            tentativa.
-          </Notice>
-        </div>
+      {r.status === 'running' ? (
+        <Card className="mb-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="flex items-center gap-3 text-sm text-white/75">
+              <Glasses className="h-5 w-5 shrink-0 text-cyan-200" />
+              {confirming
+                ? 'Cancelar o treinamento? O Quest volta para o lobby e a tentativa em andamento não conta.'
+                : r.attempts
+                  ? 'Treinamento em andamento: o aluno está em uma nova tentativa.'
+                  : 'Treinamento em andamento. O resultado aparece aqui ao final de cada tentativa.'}
+            </p>
+            {canCancel ? (
+              confirming ? (
+                <div className="flex shrink-0 gap-2">
+                  <button
+                    type="button"
+                    className="secondary-btn"
+                    onClick={() => setConfirming(false)}
+                  >
+                    Continuar
+                  </button>
+                  <button
+                    type="button"
+                    className="danger-btn"
+                    onClick={() => void cancel()}
+                  >
+                    Cancelar treinamento
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="secondary-btn shrink-0"
+                  onClick={() => setConfirming(true)}
+                >
+                  Cancelar treinamento
+                </button>
+              )
+            ) : null}
+          </div>
+        </Card>
       ) : null}
       {practice && r.attempts ? (
         <div className="mb-5">

@@ -325,6 +325,7 @@ export type Quest = {
   app_version: string | null;
   last_seen_at: string | null;
   busy: boolean | null;
+  online: boolean | null;
 };
 
 const TOKEN_KEY = 'platform-safety.api-session';

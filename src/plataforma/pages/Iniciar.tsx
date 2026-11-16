@@ -1,7 +1,17 @@
-import { Archive, Check, Glasses, Play, UsersRound } from 'lucide-react';
+import {
+  Archive,
+  Check,
+  ChevronDown,
+  Circle,
+  FlaskConical,
+  Glasses,
+  Play,
+  UsersRound,
+} from 'lucide-react';
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
   type FormEvent,
   type ReactNode,
@@ -18,12 +28,12 @@ import {
   type Course,
   type LearningPath,
   type Lesson,
+  type Quest,
   type VrRequest,
 } from '../api';
 import {
   courseCover,
   criterionText,
-  formatCode,
   formatRelative,
   formatScore,
   plural,
@@ -55,84 +65,164 @@ type Training = {
   status?: ReactNode;
 };
 
-function Step({
+/** Uma das escolhas (treinamento, aluno, Quest): cabeçalho numerado e lista que rola por dentro. */
+function Panel({
+  id,
   n,
   title,
-  children,
+  done,
   aside,
+  waiting,
+  children,
 }: {
+  id: string;
   n: number;
   title: string;
-  children: ReactNode;
+  done: boolean;
   aside?: ReactNode;
+  /** o que falta antes desta escolha (ex.: "Escolha o treinamento primeiro") */
+  waiting?: string;
+  children: ReactNode;
 }) {
   return (
-    <Card>
-      <div className="mb-4 flex items-center justify-between gap-3">
+    <section
+      id={id}
+      className={`flex min-h-0 scroll-mt-24 flex-col rounded-3xl border bg-white/[0.04] p-4 backdrop-blur-xl transition sm:p-5 ${done ? 'border-white/10' : 'border-white/15'}`}
+    >
+      <header className="mb-3 flex min-h-7 items-center justify-between gap-3">
         <h2 className="flex items-center gap-2.5 text-base font-semibold text-white">
-          <span className="grid h-6 w-6 place-items-center rounded-full bg-cyan-400/15 text-xs text-cyan-100">
-            {n}
+          <span
+            className={`grid h-6 w-6 place-items-center rounded-full text-xs ${done ? 'bg-emerald-400/20 text-emerald-200' : 'bg-cyan-400/15 text-cyan-100'}`}
+          >
+            {done ? <Check className="h-3.5 w-3.5" /> : n}
           </span>
           {title}
         </h2>
         {aside}
-      </div>
-      {children}
-    </Card>
+      </header>
+      {waiting ? (
+        <div className="grid min-h-32 flex-1 place-items-center rounded-2xl border border-dashed border-white/10 px-4 text-center text-sm text-white/45">
+          {waiting}
+        </div>
+      ) : (
+        children
+      )}
+    </section>
   );
 }
 
-/** Cartão do treinamento com a foto de capa do curso (ou um degradê), como na galeria do aluno. */
-function TrainingCard({
-  training: t,
+/** Lista que rola dentro do painel (no celular, com altura máxima). */
+function ScrollList({ children, label }: { children: ReactNode; label: string }) {
+  return (
+    <ul
+      aria-label={label}
+      className="-mx-1 max-h-[24rem] min-h-0 flex-1 space-y-1 overflow-y-auto px-1 lg:max-h-none"
+    >
+      {children}
+    </ul>
+  );
+}
+
+/** Miniatura da capa do curso (ou um degradê com os óculos). */
+function Thumb({ cover }: { cover: string | null }) {
+  return (
+    <span className="relative block h-11 w-14 shrink-0 overflow-hidden rounded-xl border border-white/10">
+      {cover ? (
+        <img src={cover} alt="" className="h-full w-full object-cover" />
+      ) : (
+        <span className="grid h-full w-full place-items-center bg-gradient-to-br from-cyan-500/25 via-violet-600/25 to-fuchsia-600/20">
+          <Glasses className="h-5 w-5 text-white/55" />
+        </span>
+      )}
+    </span>
+  );
+}
+
+/** Linha selecionável das listas: destaque e marca quando escolhida. */
+function OptionRow({
   active,
+  disabled,
   onClick,
   children,
 }: {
-  training: Training;
   active: boolean;
+  disabled?: boolean;
   onClick: () => void;
-  children?: ReactNode;
+  children: ReactNode;
 }) {
   return (
     <button
       type="button"
-      aria-pressed={active}
+      role="radio"
+      aria-checked={active}
+      disabled={disabled}
       onClick={onClick}
-      className={`group relative flex w-full flex-col overflow-hidden rounded-2xl border text-left transition ${active ? 'border-cyan-300/60 ring-2 ring-cyan-300/30' : 'border-white/10 hover:border-white/25'} bg-white/[0.03]`}
+      className={`flex w-full items-center gap-3 rounded-2xl border px-2.5 py-2 text-left transition disabled:cursor-not-allowed disabled:opacity-45 ${active ? 'border-cyan-300/50 bg-cyan-400/10' : 'border-transparent hover:bg-white/[0.05]'}`}
     >
-      <span className="relative block h-32 overflow-hidden">
-        {t.cover ? (
-          <img
-            src={t.cover}
-            alt=""
-            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <span className="grid h-full w-full place-items-center bg-gradient-to-br from-cyan-500/25 via-violet-600/25 to-fuchsia-600/20">
-            <Glasses className="h-9 w-9 text-white/50" />
-          </span>
-        )}
-        <span className="absolute inset-0 bg-gradient-to-t from-[#0b0918] via-[#0b0918]/30 to-transparent" />
-        <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-black/55 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">
-          <Glasses className="h-3.5 w-3.5" /> VR
-        </span>
-        {active ? (
-          <span className="absolute right-3 top-3 grid h-6 w-6 place-items-center rounded-full bg-cyan-300 text-[#0b0918]">
-            <Check className="h-4 w-4" />
-          </span>
-        ) : null}
-        <span className="absolute inset-x-3 bottom-2.5">
-          <span className="block font-semibold leading-snug text-white">
-            {t.title}
-          </span>
-        </span>
-      </span>
-      <span className="flex flex-1 flex-col gap-2 p-3.5">
-        <span className="text-xs text-white/50">{t.criterion}</span>
-        {children}
-      </span>
+      {children}
+      {active ? <Check className="h-4 w-4 shrink-0 text-cyan-200" /> : null}
     </button>
+  );
+}
+
+/** Caixa de escolha com painel suspenso (a turma): fecha ao escolher, com Esc ou clicando fora. */
+function Dropdown({
+  label,
+  value,
+  open,
+  onOpenChange,
+  children,
+}: {
+  label: string;
+  value: ReactNode;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  children: ReactNode;
+}) {
+  const box = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!open) return;
+    const outside = (event: MouseEvent) => {
+      if (box.current && !box.current.contains(event.target as Node))
+        onOpenChange(false);
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onOpenChange(false);
+    };
+    document.addEventListener('mousedown', outside);
+    document.addEventListener('keydown', escape);
+    return () => {
+      document.removeEventListener('mousedown', outside);
+      document.removeEventListener('keydown', escape);
+    };
+  }, [open, onOpenChange]);
+  return (
+    <div ref={box} className="relative">
+      <span className="mb-1.5 block text-xs font-medium text-white/50">
+        {label}
+      </span>
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        onClick={() => onOpenChange(!open)}
+        className={`flex w-full items-center gap-2 rounded-[20px] border bg-black/22 px-4 py-2.5 text-left text-sm text-white transition hover:border-white/25 ${open ? 'border-cyan-300/70' : 'border-white/12'}`}
+      >
+        <span className="min-w-0 flex-1 truncate">{value}</span>
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-white/60 transition ${open ? 'rotate-180' : ''}`}
+        />
+      </button>
+      {open ? (
+        <div
+          role="dialog"
+          aria-label={label}
+          className="absolute inset-x-0 top-full z-30 mt-2 rounded-2xl border border-white/12 bg-[#15122a] p-3 shadow-[0_24px_60px_rgba(0,0,0,0.55)]"
+        >
+          {children}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -158,7 +248,11 @@ function LessonStatus({ lesson }: { lesson: LearningPath['lessons'][number] }) {
   return <span className="status-pill status-pill-muted">Não fez</span>;
 }
 
-/** Iniciar: turma → treinamento → aluno (instrutor), ou só o treinamento (aluno e rodada de teste); depois o código. */
+/**
+ * Iniciar: três escolhas lado a lado, numa tela só — treinamento (com a turma, para o instrutor), aluno e Quest —
+ * e um resumo fixo embaixo que mostra o que falta; o envio só libera com tudo escolhido.
+ * Aluno e rodada de teste: só treinamento e Quest.
+ */
 export default function Iniciar() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -173,7 +267,9 @@ export default function Iniciar() {
     params.get('matricula') ?? ''
   );
   const [search, setSearch] = useState('');
-  const [code, setCode] = useState('');
+  const [questId, setQuestId] = useState('');
+  // os Quests da organização, com a situação ao vivo (livre, em uso, sem conexão)
+  const quests = useLoad(() => api<Quest[]>('/quests'), [], 8000);
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
   const wantedLesson = params.get('licao');
@@ -405,8 +501,9 @@ export default function Iniciar() {
         return rank(a) - rank(b) || byName;
       });
   }, [inTraining, search, learnerStatus, learnerSort, enrollmentId]);
+  // o aluno escolhido continua escolhido mesmo quando a busca o esconde da lista
   const learner =
-    learners.find((r) => r.path.enrollment_id === enrollmentId) ?? null;
+    inTraining.find((r) => r.path.enrollment_id === enrollmentId) ?? null;
 
   // escolhas únicas já vêm marcadas; o link pode trazer turma, treinamento e aluno
   useEffect(() => {
@@ -434,14 +531,26 @@ export default function Iniciar() {
     );
   }, [trainings, trainingKey, wantedLesson, enrollmentId, isInstructor]);
 
+  // Quest: a lista se atualiza sozinha; com um só livre, ele já vem escolhido
+  const questList = useMemo(() => quests.data ?? [], [quests.data]);
+  const quest = questList.find((q) => q.id === questId) ?? null;
+  const questReady = Boolean(quest && questIsFree(quest));
+  const freeQuests = questList.filter(questIsFree);
+  const onlyFreeQuest = freeQuests.length === 1 ? freeQuests[0].id : '';
+  useEffect(() => {
+    if (!questId && onlyFreeQuest) setQuestId(onlyFreeQuest);
+  }, [questId, onlyFreeQuest]);
+
+  const [classOpen, setClassOpen] = useState(false);
+
   async function submit(event: FormEvent) {
     event.preventDefault();
     setError('');
     if (!training) return setError('Escolha o treinamento.');
     if (isInstructor && mode === 'assessment' && !learner)
       return setError('Escolha o aluno.');
-    if (code.replace('-', '').length < 6)
-      return setError('Digite os 6 caracteres que aparecem no Quest.');
+    if (!questId || !questReady)
+      return setError('Escolha o Quest em que o treinamento vai começar.');
     const body =
       mode === 'practice'
         ? { lesson_id: training.lessonId }
@@ -455,7 +564,7 @@ export default function Iniciar() {
     setSending(true);
     try {
       const created = await post<VrRequest>('/vr-requests', {
-        code,
+        quest_id: questId,
         mode,
         ...body,
       });
@@ -485,15 +594,72 @@ export default function Iniciar() {
     );
 
   const assessment = isInstructor && mode === 'assessment';
-  const numbers = {
-    turma: 1,
-    treinamento: assessment ? 2 : 1,
-    aluno: 3,
-    codigo: assessment ? (training ? 4 : 3) : 2,
+  const chosenClass = classes.find((c) => c.id === classId) ?? null;
+  const panels = {
+    training: 'escolha-treinamento',
+    learner: 'escolha-aluno',
+    quest: 'escolha-quest',
   };
 
+  // o resumo: cada escolha com o valor ou "falta escolher"; o botão só libera quando está tudo certo
+  const summary: {
+    panel: string;
+    label: string;
+    value: string | null;
+    detail?: string;
+    missing: string;
+  }[] = [
+    ...(assessment
+      ? [
+          {
+            panel: panels.training,
+            label: 'Turma',
+            value: chosenClass?.name ?? null,
+            missing: 'a turma',
+          },
+        ]
+      : []),
+    {
+      panel: panels.training,
+      label: 'Treinamento VR',
+      value: training?.title ?? null,
+      detail: training?.course,
+      missing: 'o treinamento',
+    },
+    ...(assessment
+      ? [
+          {
+            panel: panels.learner,
+            label: 'Aluno',
+            value: learner?.path.student_name ?? null,
+            missing: 'o aluno',
+          },
+        ]
+      : []),
+    {
+      panel: panels.quest,
+      label: 'Quest',
+      value: questReady ? (quest?.name ?? 'Quest') : null,
+      missing: quest ? 'outro Quest' : 'o Quest',
+    },
+  ];
+  const missing = summary.filter((s) => !s.value).map((s) => s.missing);
+  const missingText = missing.length
+    ? `Falta escolher ${
+        missing.length === 1
+          ? missing[0]
+          : `${missing.slice(0, -1).join(', ')} e ${missing[missing.length - 1]}`
+      }.`
+    : '';
+  const goTo = (panel: string) =>
+    document
+      .getElementById(panel)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  const questStep = assessment ? 3 : 2;
+
   return (
-    <>
+    <div className="flex flex-col lg:h-[calc(100dvh-9.75rem)] lg:min-h-[36rem]">
       <PageTitle
         title="Iniciar treinamento"
         actions={
@@ -514,243 +680,313 @@ export default function Iniciar() {
         }
       />
 
-      <form onSubmit={submit} className="grid items-start gap-5 lg:grid-cols-5">
-        <div className="space-y-5 lg:col-span-3">
-          {assessment ? (
-            <Step n={numbers.turma} title="Turma">
-              {classes.length ? (
-                <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-                  <SearchField
-                    value={classQuery}
-                    onChange={setClassQuery}
-                    placeholder="Buscar turma"
-                    className="w-full sm:w-56"
-                  />
-                  {archivedCount ? (
-                    <Segmented
-                      value={classScope}
-                      onChange={(v) => {
-                        setClassScope(v);
-                        setAllClasses(false);
-                      }}
-                      options={[
-                        { value: 'active', label: `Ativas ${activeCount}` },
-                        {
-                          value: 'archived',
-                          label: `Arquivadas ${archivedCount}`,
-                        },
-                      ]}
-                    />
-                  ) : null}
-                  <select
-                    className="admin-select sm:ml-auto sm:w-52"
-                    value={classSort}
-                    onChange={(e) =>
-                      setClassSort(e.target.value as typeof classSort)
-                    }
-                    aria-label="Ordenar turmas"
-                  >
-                    <option value="activity">Atividade recente</option>
-                    <option value="name">Nome</option>
-                    <option value="learners">Mais alunos</option>
-                  </select>
-                </div>
-              ) : null}
-              {classes.length && !classMatches.length ? (
-                <p className="text-sm text-white/50">
-                  {classQuery
-                    ? 'Nenhuma turma encontrada.'
-                    : classScope === 'archived'
-                      ? 'Nenhuma turma arquivada.'
-                      : 'Nenhuma turma ativa.'}
-                </p>
-              ) : classes.length ? (
-                <>
-                  {classScope === 'archived' ? (
-                    <p className="mb-2 text-xs text-white/45">
-                      Turma arquivada não inicia treinamento: o gestor pode
-                      reativá-la em Turmas.
-                    </p>
-                  ) : null}
-                  <div className="flex flex-wrap gap-2">
-                    {shownClasses.map((c) => {
-                      const archived = Boolean(c.archived_at);
-                      return (
-                        <button
-                          key={c.id}
-                          type="button"
-                          disabled={archived}
-                          aria-pressed={c.id === classId}
-                          title={
-                            c.lastActivity
-                              ? `Última tentativa ${formatRelative(c.lastActivity)}`
-                              : 'Sem tentativas ainda'
-                          }
-                          onClick={() => {
-                            setClassId(c.id);
-                            setTrainingKey('');
-                            setEnrollmentId('');
-                          }}
-                          className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition disabled:cursor-not-allowed disabled:opacity-50 ${c.id === classId ? 'border-cyan-300/50 bg-cyan-400/10 text-white' : 'border-white/10 bg-white/[0.03] text-white/70 hover:border-white/25'}`}
-                        >
-                          {archived ? (
-                            <Archive className="h-4 w-4" />
-                          ) : (
-                            <UsersRound className="h-4 w-4" />
-                          )}{' '}
-                          {c.name}
+      <form
+        onSubmit={submit}
+        className="flex min-h-0 flex-1 flex-col gap-4"
+        noValidate
+      >
+        <div
+          className={`grid gap-4 lg:min-h-0 lg:flex-1 lg:grid-rows-[minmax(0,1fr)] ${assessment ? 'lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.1fr)_minmax(0,0.8fr)]' : 'lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]'}`}
+        >
+          {/* 1. Turma (instrutor) e treinamento */}
+          <Panel
+            id={panels.training}
+            n={1}
+            title="Treinamento"
+            done={Boolean(training) && (!assessment || Boolean(classId))}
+            aside={
+              trainings.length > 1 ? (
+                <span className="text-xs text-white/45">
+                  {trainingList.length === trainings.length
+                    ? plural(trainings.length, 'treinamento', 'treinamentos')
+                    : `${trainingList.length} de ${trainings.length}`}
+                </span>
+              ) : null
+            }
+          >
+            {assessment ? (
+              classes.length ? (
+                <div className="mb-3">
+                  <Dropdown
+                    label="Turma"
+                    open={classOpen}
+                    onOpenChange={setClassOpen}
+                    value={
+                      chosenClass ? (
+                        <span className="flex items-center gap-2">
+                          <UsersRound className="h-4 w-4 shrink-0 text-white/55" />
+                          <span className="truncate">{chosenClass.name}</span>
                           <span className="text-xs text-white/45">
-                            {c.learners}
+                            {plural(chosenClass.learners, 'aluno', 'alunos')}
                           </span>
+                        </span>
+                      ) : (
+                        <span className="text-amber-200">Escolha a turma</span>
+                      )
+                    }
+                  >
+                    <div className="space-y-2">
+                      <SearchField
+                        value={classQuery}
+                        onChange={setClassQuery}
+                        placeholder="Buscar turma"
+                      />
+                      <div className="flex flex-wrap items-center gap-2">
+                        {archivedCount ? (
+                          <Segmented
+                            value={classScope}
+                            onChange={(v) => {
+                              setClassScope(v);
+                              setAllClasses(false);
+                            }}
+                            options={[
+                              { value: 'active', label: `Ativas ${activeCount}` },
+                              {
+                                value: 'archived',
+                                label: `Arquivadas ${archivedCount}`,
+                              },
+                            ]}
+                          />
+                        ) : null}
+                        <select
+                          className="admin-select ml-auto w-44 py-2"
+                          value={classSort}
+                          onChange={(e) =>
+                            setClassSort(e.target.value as typeof classSort)
+                          }
+                          aria-label="Ordenar turmas"
+                        >
+                          <option value="activity">Atividade recente</option>
+                          <option value="name">Nome</option>
+                          <option value="learners">Mais alunos</option>
+                        </select>
+                      </div>
+                      {classScope === 'archived' && classMatches.length ? (
+                        <p className="text-xs text-white/45">
+                          Turma arquivada não inicia treinamento: o gestor pode
+                          reativá-la em Turmas.
+                        </p>
+                      ) : null}
+                      {classMatches.length ? (
+                        <ul className="max-h-64 space-y-1 overflow-y-auto">
+                          {shownClasses.map((c) => {
+                            const archived = Boolean(c.archived_at);
+                            return (
+                              <li key={c.id}>
+                                <OptionRow
+                                  active={c.id === classId}
+                                  disabled={archived}
+                                  onClick={() => {
+                                    setClassId(c.id);
+                                    setTrainingKey('');
+                                    setEnrollmentId('');
+                                    setClassOpen(false);
+                                  }}
+                                >
+                                  {archived ? (
+                                    <Archive className="h-4 w-4 shrink-0 text-white/50" />
+                                  ) : (
+                                    <UsersRound className="h-4 w-4 shrink-0 text-white/50" />
+                                  )}
+                                  <span className="min-w-0 flex-1">
+                                    <span className="block truncate text-sm text-white">
+                                      {c.name}
+                                    </span>
+                                    <span className="block text-xs text-white/40">
+                                      {plural(c.learners, 'aluno', 'alunos')} ·{' '}
+                                      {c.lastActivity
+                                        ? `última tentativa ${formatRelative(c.lastActivity)}`
+                                        : 'sem tentativas ainda'}
+                                    </span>
+                                  </span>
+                                </OptionRow>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      ) : (
+                        <p className="px-1 py-2 text-sm text-white/50">
+                          {classQuery
+                            ? 'Nenhuma turma encontrada.'
+                            : classScope === 'archived'
+                              ? 'Nenhuma turma arquivada.'
+                              : 'Nenhuma turma ativa.'}
+                        </p>
+                      )}
+                      {classMatches.length > CLASS_LIMIT ? (
+                        <button
+                          type="button"
+                          className="p-action"
+                          onClick={() => setAllClasses(!allClasses)}
+                        >
+                          {allClasses
+                            ? 'Mostrar menos'
+                            : `Mais ${classMatches.length - CLASS_LIMIT}`}
                         </button>
-                      );
-                    })}
-                    {classMatches.length > CLASS_LIMIT ? (
-                      <button
-                        type="button"
-                        className="p-action self-center"
-                        onClick={() => setAllClasses(!allClasses)}
-                      >
-                        {allClasses
-                          ? 'Mostrar menos'
-                          : `Mais ${classMatches.length - CLASS_LIMIT}`}
-                      </button>
-                    ) : null}
-                  </div>
-                </>
+                      ) : null}
+                    </div>
+                  </Dropdown>
+                </div>
               ) : (
                 <Empty title="Você ainda não está em nenhuma turma">
                   O gestor da organização inclui instrutores nas turmas.
                 </Empty>
-              )}
-            </Step>
-          ) : null}
+              )
+            ) : null}
 
-          <Step n={numbers.treinamento} title="Treinamento">
             {trainings.length > 1 ? (
-              <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+              <div className="mb-3 space-y-2">
                 <SearchField
                   value={trainingQuery}
                   onChange={setTrainingQuery}
                   placeholder="Buscar treinamento ou curso"
-                  className="w-full sm:min-w-48 sm:flex-1"
                 />
-                {trainingCourses.length > 1 ? (
-                  <select
-                    className="admin-select sm:w-60"
-                    value={
-                      trainingCourses.includes(trainingCourse)
-                        ? trainingCourse
-                        : ''
-                    }
-                    onChange={(e) => setTrainingCourse(e.target.value)}
-                    aria-label="Curso"
-                  >
-                    <option value="">Todos os cursos</option>
-                    {trainingCourses.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                ) : null}
-                <select
-                  className="admin-select sm:w-44"
-                  value={trainingSort}
-                  onChange={(e) =>
-                    setTrainingSort(e.target.value as typeof trainingSort)
-                  }
-                  aria-label="Ordenar treinamentos"
-                >
-                  <option value="course">Por curso</option>
-                  <option value="name">Nome</option>
-                  {assessment ? (
-                    <option value="todo">Mais alunos a fazer</option>
+                <div className="flex gap-2">
+                  {trainingCourses.length > 1 ? (
+                    <select
+                      className="admin-select min-w-0 flex-1 py-2"
+                      value={
+                        trainingCourses.includes(trainingCourse)
+                          ? trainingCourse
+                          : ''
+                      }
+                      onChange={(e) => setTrainingCourse(e.target.value)}
+                      aria-label="Curso"
+                    >
+                      <option value="">Todos os cursos</option>
+                      {trainingCourses.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
                   ) : null}
-                </select>
+                  <select
+                    className={`admin-select min-w-0 py-2 ${trainingCourses.length > 1 ? 'flex-1' : 'w-full'}`}
+                    value={trainingSort}
+                    onChange={(e) =>
+                      setTrainingSort(e.target.value as typeof trainingSort)
+                    }
+                    aria-label="Ordenar treinamentos"
+                  >
+                    <option value="course">Por curso</option>
+                    <option value="name">Nome</option>
+                    {assessment ? (
+                      <option value="todo">Mais alunos a fazer</option>
+                    ) : null}
+                  </select>
+                </div>
               </div>
             ) : null}
+
             {trainings.length && !trainingList.length ? (
-              <p className="text-sm text-white/50">
+              <p className="px-1 py-2 text-sm text-white/50">
                 Nenhum treinamento encontrado.
               </p>
             ) : trainings.length ? (
-              <div className="space-y-5">
+              <ScrollList label="Treinamentos">
                 {[...new Set(trainingList.map((t) => t.course))].map(
                   (courseTitle) => {
                     const inCourse = trainingList.filter(
                       (t) => t.course === courseTitle
                     );
                     return (
-                      <section key={courseTitle}>
-                        <p className="mb-2 flex items-center gap-2 text-xs text-white/50">
-                          <span className="font-medium uppercase tracking-wide text-cyan-100/80">
-                            Curso
+                      <li key={courseTitle}>
+                        <p className="mb-1 mt-2 flex items-center gap-2 px-1 text-xs first:mt-0">
+                          <span className="truncate font-medium text-cyan-100/80">
+                            {courseTitle}
                           </span>
-                          <span className="text-white/80">{courseTitle}</span>
-                          <span className="text-white/35">
-                            ·{' '}
+                          <span className="shrink-0 text-white/35">
                             {inCourse.length === 1
                               ? '1 treinamento VR'
                               : `${inCourse.length} treinamentos VR`}
                           </span>
                         </p>
-                        <div className="grid gap-3 sm:grid-cols-2">
+                        <ul className="space-y-1" role="radiogroup" aria-label={courseTitle}>
                           {inCourse.map((t) => (
-                            <TrainingCard
-                              key={t.key}
-                              training={t}
-                              active={t.key === trainingKey}
-                              onClick={() => setTrainingKey(t.key)}
-                            >
-                              {t.status ? <span>{t.status}</span> : null}
-                              {assessment && t.total ? (
-                                <span className="text-xs text-white/55">
-                                  {t.passed}/{t.total} aprovados
+                            <li key={t.key}>
+                              <OptionRow
+                                active={t.key === trainingKey}
+                                onClick={() => setTrainingKey(t.key)}
+                              >
+                                <Thumb cover={t.cover} />
+                                <span className="min-w-0 flex-1">
+                                  <span className="block truncate text-sm font-medium text-white">
+                                    {t.title}
+                                  </span>
+                                  <span className="block truncate text-xs text-white/45">
+                                    {t.criterion}
+                                  </span>
+                                  {t.status ? (
+                                    <span className="mt-1 block">{t.status}</span>
+                                  ) : null}
                                 </span>
-                              ) : null}
-                            </TrainingCard>
+                                {assessment && t.total ? (
+                                  <span
+                                    className="shrink-0 text-right text-xs tabular-nums text-white/55"
+                                    title={`${t.passed} de ${t.total} alunos aprovados`}
+                                  >
+                                    {t.passed}/{t.total}
+                                    <span className="block text-[11px] text-white/35">
+                                      aprovados
+                                    </span>
+                                  </span>
+                                ) : null}
+                              </OptionRow>
+                            </li>
                           ))}
-                        </div>
-                      </section>
+                        </ul>
+                      </li>
                     );
                   }
                 )}
-              </div>
+              </ScrollList>
+            ) : assessment && !classId ? (
+              classes.length ? (
+                <div className="grid min-h-32 flex-1 place-items-center rounded-2xl border border-dashed border-white/10 px-4 text-center text-sm text-white/45">
+                  Escolha a turma para ver os treinamentos.
+                </div>
+              ) : null
             ) : (
-              <Empty
-                title={
-                  assessment && !classId
-                    ? 'Escolha a turma'
-                    : 'Nenhum treinamento VR aqui'
-                }
-              />
+              <Empty title="Nenhum treinamento VR aqui" />
             )}
-          </Step>
+          </Panel>
 
-          {assessment && training ? (
-            <Step
-              n={numbers.aluno}
+          {/* 2. Aluno (instrutor, para um aluno) */}
+          {assessment ? (
+            <Panel
+              id={panels.learner}
+              n={2}
               title="Aluno"
+              done={Boolean(learner)}
+              waiting={
+                !classId
+                  ? 'Escolha a turma e o treinamento primeiro.'
+                  : !training
+                    ? 'Escolha o treinamento primeiro.'
+                    : undefined
+              }
               aside={
-                <span className="text-xs text-white/45">
-                  {learners.length === inTraining.length
-                    ? plural(learners.length, 'aluno', 'alunos')
-                    : `${learners.length} de ${inTraining.length}`}
-                </span>
+                training && inTraining.length ? (
+                  <span className="text-xs text-white/45">
+                    {learners.length === inTraining.length
+                      ? plural(learners.length, 'aluno', 'alunos')
+                      : `${learners.length} de ${inTraining.length}`}
+                  </span>
+                ) : null
               }
             >
               {inTraining.length ? (
                 <div className="mb-3 space-y-2">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <div className="flex gap-2">
                     <SearchField
                       value={search}
                       onChange={setSearch}
-                      placeholder="Buscar pelo nome"
-                      className="w-full sm:flex-1"
+                      placeholder="Buscar aluno"
+                      className="min-w-0 flex-1"
                     />
                     <select
-                      className="admin-select sm:w-44"
+                      className="admin-select w-36 shrink-0 xl:w-40"
                       value={learnerSort}
                       onChange={(e) =>
                         setLearnerSort(e.target.value as typeof learnerSort)
@@ -780,27 +1016,24 @@ export default function Iniciar() {
                 </div>
               ) : null}
               {learners.length ? (
-                <ul className="max-h-[26rem] space-y-1.5 overflow-y-auto pr-1">
+                <ScrollList label="Alunos">
                   {learners.map(({ path, lesson }) => {
-                    const active = path.enrollment_id === enrollmentId;
                     const busy =
                       lesson.vr_status === 'pending' ||
                       lesson.vr_status === 'running';
                     return (
                       <li key={path.enrollment_id}>
-                        <button
-                          type="button"
-                          aria-pressed={active}
+                        <OptionRow
+                          active={path.enrollment_id === enrollmentId}
                           disabled={busy}
                           onClick={() => setEnrollmentId(path.enrollment_id)}
-                          className={`flex w-full items-center gap-3 rounded-2xl border px-3 py-2.5 text-left transition disabled:opacity-50 ${active ? 'border-cyan-300/50 bg-cyan-400/10' : 'border-transparent hover:bg-white/[0.04]'}`}
                         >
                           <Avatar name={path.student_name} />
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-sm font-medium text-white">
                               {path.student_name}
                             </span>
-                            <span className="block text-xs text-white/40">
+                            <span className="block truncate text-xs text-white/40">
                               {lesson.attempts
                                 ? plural(
                                     lesson.attempts,
@@ -810,17 +1043,12 @@ export default function Iniciar() {
                                 : 'Nenhuma tentativa'}
                             </span>
                           </span>
-                          <span className="hidden sm:inline">
-                            <LessonStatus lesson={lesson} />
-                          </span>
-                          {active ? (
-                            <Check className="h-4 w-4 shrink-0 text-cyan-200" />
-                          ) : null}
-                        </button>
+                          <LessonStatus lesson={lesson} />
+                        </OptionRow>
                       </li>
                     );
                   })}
-                </ul>
+                </ScrollList>
               ) : (
                 <Empty
                   title={
@@ -834,80 +1062,187 @@ export default function Iniciar() {
                   }
                 />
               )}
-            </Step>
+            </Panel>
           ) : null}
-        </div>
 
-        <div className="lg:sticky lg:top-6 lg:col-span-2">
-          <Card>
-            <h2 className="mb-1 flex items-center gap-2.5 text-base font-semibold text-white">
-              <span className="grid h-6 w-6 place-items-center rounded-full bg-cyan-400/15 text-xs text-cyan-100">
-                {numbers.codigo}
-              </span>
-              Código do Quest
-            </h2>
-            <p className="mb-4 text-sm text-white/50">
-              Coloque o Quest e digite o código que aparece no painel.
+          {/* 3. Quest */}
+          <Panel
+            id={panels.quest}
+            n={questStep}
+            title="Quest"
+            done={questReady}
+            aside={
+              questList.length ? (
+                <span className="text-xs text-white/45">
+                  {freeQuests.length === questList.length
+                    ? freeQuests.length === 1
+                      ? '1 disponível'
+                      : `${freeQuests.length} disponíveis`
+                    : `${freeQuests.length} de ${questList.length} disponíveis`}
+                </span>
+              ) : null
+            }
+          >
+            <p className="mb-3 text-xs leading-relaxed text-white/50">
+              O nome do óculos aparece no painel do Quest. O aluno confirma no
+              próprio óculos antes de começar.
             </p>
-            <input
-              className="p-code"
-              value={code}
-              onChange={(e) => setCode(formatCode(e.target.value))}
-              placeholder="K7Q-4M2"
-              autoComplete="off"
-              autoCapitalize="characters"
-              spellCheck={false}
-              aria-label="Código mostrado no Quest"
+            <QuestPicker
+              quests={questList}
+              loading={quests.loading}
+              value={questId}
+              onChange={setQuestId}
+              canSetUp={isInstructor}
             />
-
-            <dl className="mt-5 space-y-2 text-sm">
-              {assessment ? (
-                <div className="flex justify-between gap-3">
-                  <dt className="text-white/45">Aluno</dt>
-                  <dd className="truncate text-right text-white">
-                    {learner?.path.student_name ?? '—'}
-                  </dd>
-                </div>
-              ) : null}
-              <div className="flex justify-between gap-3">
-                <dt className="text-white/45">Curso</dt>
-                <dd className="truncate text-right text-white">
-                  {training?.course ?? '—'}
-                </dd>
-              </div>
-              <div className="flex justify-between gap-3">
-                <dt className="text-white/45">Treinamento VR</dt>
-                <dd className="truncate text-right text-white">
-                  {training?.title ?? '—'}
-                </dd>
-              </div>
-            </dl>
-
+            {questList.length && !freeQuests.length ? (
+              <p className="mt-3 text-xs text-amber-100/80">
+                Nenhum Quest livre agora. A lista se atualiza sozinha: quando
+                um terminar ou voltar a ter conexão, ele fica disponível aqui.
+              </p>
+            ) : null}
             {mode === 'practice' ? (
-              <div className="mt-4">
+              <div className="mt-3">
                 <Notice tone="warn">
                   Rodada de teste: o Quest avisa que é um teste e o resultado
                   não conta para ninguém.
                 </Notice>
               </div>
             ) : null}
-            {error ? (
-              <div className="mt-4">
-                <Notice tone="error">{error}</Notice>
-              </div>
-            ) : null}
+          </Panel>
+        </div>
 
-            <button
-              type="submit"
-              className="primary-btn mt-5 w-full"
-              disabled={sending}
-            >
-              <Play className="h-4 w-4" />
-              {sending ? 'Enviando ao Quest…' : 'Enviar para o Quest'}
-            </button>
-          </Card>
+        {/* resumo sempre à vista, com o que falta e o envio */}
+        <div className="sticky bottom-3 z-20 rounded-3xl border border-white/12 bg-[#0f0c1f]/90 p-3 shadow-[0_-12px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-4 lg:static lg:shadow-none">
+          {error ? (
+            <div className="mb-3">
+              <Notice tone="error">{error}</Notice>
+            </div>
+          ) : null}
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+            <ol className="hidden min-w-0 flex-1 gap-2 sm:flex sm:flex-wrap lg:flex-nowrap">
+              {mode === 'practice' ? (
+                <li className="flex items-center">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/25 bg-amber-400/10 px-3 py-1.5 text-xs font-medium text-amber-100">
+                    <FlaskConical className="h-3.5 w-3.5" /> Rodada de teste
+                  </span>
+                </li>
+              ) : null}
+              {summary.map((s) => (
+                <li key={s.label} className="min-w-0 sm:max-w-[16rem] lg:flex-1">
+                  <button
+                    type="button"
+                    onClick={() => goTo(s.panel)}
+                    className={`flex w-full min-w-0 items-center gap-2.5 rounded-2xl border px-3 py-2 text-left transition hover:border-white/25 ${s.value ? 'border-white/10 bg-white/[0.03]' : 'border-amber-300/30 bg-amber-400/[0.07]'}`}
+                  >
+                    {s.value ? (
+                      <Check className="h-4 w-4 shrink-0 text-emerald-300" />
+                    ) : (
+                      <Circle className="h-4 w-4 shrink-0 text-amber-300/80" />
+                    )}
+                    <span className="min-w-0">
+                      <span className="block text-[11px] uppercase tracking-wide text-white/45">
+                        {s.label}
+                      </span>
+                      <span
+                        className={`block truncate text-sm ${s.value ? 'font-medium text-white' : 'text-amber-100'}`}
+                        title={s.value ? [s.value, s.detail].filter(Boolean).join(' · ') : undefined}
+                      >
+                        {s.value ??
+                          (s.label === 'Quest' && quest
+                            ? 'Ficou indisponível'
+                            : 'Falta escolher')}
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+            <div className="flex shrink-0 flex-col items-stretch gap-1.5 lg:w-60">
+              <button
+                type="submit"
+                className="primary-btn"
+                disabled={sending || missing.length > 0}
+                aria-describedby="iniciar-falta"
+              >
+                <Play className="h-4 w-4" />
+                {sending ? 'Enviando ao Quest…' : 'Enviar para o Quest'}
+              </button>
+              <p
+                id="iniciar-falta"
+                className={`text-center text-xs ${missing.length ? 'text-amber-200/90' : 'text-white/45'}`}
+                aria-live="polite"
+              >
+                {missingText || 'Tudo pronto: o aluno confirma no óculos.'}
+              </p>
+            </div>
+          </div>
         </div>
       </form>
-    </>
+    </div>
+  );
+}
+
+/** Quest livre: pode receber o treinamento (nem em uso, nem sem conexão). */
+function questIsFree(q: Quest) {
+  return !q.busy && q.online !== false;
+}
+
+/** Os Quests da organização: livre (pode receber o treinamento), em uso ou sem conexão. */
+function QuestPicker({
+  quests,
+  loading,
+  value,
+  onChange,
+  canSetUp,
+}: {
+  quests: Quest[];
+  loading: boolean;
+  value: string;
+  onChange: (id: string) => void;
+  canSetUp: boolean;
+}) {
+  if (loading && !quests.length)
+    return <p className="text-sm text-white/45">Carregando os Quests…</p>;
+  if (!quests.length)
+    return (
+      <Notice tone="warn">
+        Nenhum Quest vinculado à organização.{' '}
+        {canSetUp
+          ? 'Vincule um em Quests: o óculos mostra o código de configuração na primeira vez.'
+          : 'Peça ao gestor ou ao instrutor para vincular um em Quests.'}
+      </Notice>
+    );
+  const state = (q: Quest) =>
+    q.busy ? 'Em uso' : q.online === false ? 'Sem conexão' : 'Disponível';
+  return (
+    <ScrollList label="Quests">
+      {quests.map((q) => {
+        const free = questIsFree(q);
+        return (
+          <li key={q.id}>
+            <OptionRow
+              active={value === q.id}
+              disabled={!free && value !== q.id}
+              onClick={() => onChange(q.id)}
+            >
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/10 bg-white/[0.05]">
+                <Glasses className="h-4 w-4 text-white/65" />
+              </span>
+              <span className="min-w-0 flex-1 truncate text-sm font-medium text-white">
+                {q.name ?? 'Quest'}
+              </span>
+              <span
+                className={`inline-flex shrink-0 items-center gap-1.5 text-xs ${free ? 'text-emerald-300' : q.busy ? 'text-amber-300' : 'text-white/45'}`}
+              >
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${free ? 'bg-emerald-300' : q.busy ? 'bg-amber-300' : 'bg-white/35'}`}
+                />
+                {state(q)}
+              </span>
+            </OptionRow>
+          </li>
+        );
+      })}
+    </ScrollList>
   );
 }

@@ -113,7 +113,7 @@ export default function EtapaPrevia() {
                   content.passing_score,
                   content.max_critical_errors
                 )}
-                . O aluno inicia com o código que aparece no óculos.
+                . O treinamento é enviado a um Quest da organização e o aluno confirma no óculos.
               </p>
             ) : (
               <LessonBody content={content} />

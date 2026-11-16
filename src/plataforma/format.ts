@@ -63,6 +63,10 @@ export const stepLabels: Record<string, string> = {
   discharge: 'Combater o foco',
   observe: 'Observar o rescaldo',
   evacuate: 'Abandonar o local',
+  power_off: 'Desligar a energia',
+  hood_system: 'Acionar o sistema da coifa',
+  gas_valve: 'Fechar o gás',
+  source: 'Fechar a fonte (torneira do tambor)',
   geral: 'Geral',
 };
 
@@ -78,6 +82,10 @@ export const competencyLabels: Record<string, string> = {
   tecnica_de_combate: 'Técnica de combate',
   rescaldo: 'Rescaldo',
   abandono: 'Abandono do local',
+  desenergizacao: 'Desenergização do painel',
+  sistema_supressao: 'Sistema de supressão da coifa',
+  corte_de_gas: 'Corte do gás',
+  controle_da_fonte: 'Controle da fonte do vazamento',
 };
 
 export const errorLabels: Record<string, string> = {
@@ -92,10 +100,21 @@ export const errorLabels: Record<string, string> = {
   unsafe_discharge_distance: 'Disparou abaixo da distância segura',
   unsuitable_agent: 'Usou extintor inadequado',
   incorrect_action: 'Ação incorreta',
+  electric_shock: 'Água em painel energizado (choque elétrico)',
+  energized_combat: 'Combateu com o painel ainda energizado',
+  reignition: 'O fogo voltou (reignição)',
+  abc_on_equipment: 'Pó ABC no equipamento elétrico',
+  off_walkway: 'Andou fora da passarela de pedestres',
+  water_on_liquid_fire: 'Água em líquido inflamável (espalhou o fogo)',
+  stepped_in_liquid: 'Pisou no líquido inflamável derramado',
+  exit_behind_fire: 'Saiu pela porta atrás do fogo',
 };
 
 export const trainingNames: Record<string, string> = {
   'fire-class-a': 'Incêndio classe A · escritório',
+  'fire-class-k': 'Incêndio classe K · cozinha profissional',
+  'fire-class-c': 'Incêndio classe C · fábrica',
+  'fire-class-b': 'Incêndio classe B · armazém de inflamáveis',
 };
 
 export const label = (
@@ -456,6 +475,9 @@ export const complianceOrder: ComplianceStatus[] = [
 
 export const trainingPlaces: Record<string, string> = {
   'fire-class-a': 'Escritório Immersia',
+  'fire-class-k': 'Cozinha profissional',
+  'fire-class-c': 'Fábrica · área elétrica',
+  'fire-class-b': 'Armazém · área de fracionamento',
 };
 
 export function formatRelative(value: string | null | undefined) {
