@@ -36,6 +36,7 @@ import {
   type UserStatus,
 } from '../data/mockPlatform';
 import { formatDateTime } from '../lib/instructorAnalytics';
+import { getModuleTrainingCount, isModuleComingSoon } from '../lib/studyPlatform';
 import {
   createUser,
   deactivateUser,
@@ -83,7 +84,7 @@ const sexOptions: Array<{ value: UserSex; label: string }> = [
 
 function getContractStatusLabel(status: ContractStatus) {
   if (status === 'active') return 'Ativa';
-  if (status === 'onboarding') return 'Onboarding';
+  if (status === 'onboarding') return 'Em implantação';
   return 'Desativada';
 }
 
@@ -662,7 +663,7 @@ export default function OrganizationDetails() {
                         <div className="font-semibold text-white">{module.name}</div>
                         <div className="mt-1 text-xs text-white/50">{module.slug}</div>
                       </td>
-                      <td>{module.trainings.length}</td>
+                      <td>{getModuleTrainingCount(module.id)}</td>
                       <td>{groupsUsingModule.length}</td>
                     </tr>
                   );
@@ -785,7 +786,7 @@ export default function OrganizationDetails() {
               value={organizationForm.status}
               options={[
                 { value: 'active', label: 'Ativa' },
-                { value: 'onboarding', label: 'Onboarding' },
+                { value: 'onboarding', label: 'Em implantação' },
                 { value: 'inactive', label: 'Desativada' },
               ]}
               ariaLabel="Selecionar status da organização"
@@ -829,6 +830,11 @@ export default function OrganizationDetails() {
               >
                 <span className="text-left">
                   <span className="block text-sm font-semibold text-white">{module.name}</span>
+                  {isModuleComingSoon(module.id) ? (
+                    <span className="mt-1 block text-xs text-white/50">
+                      Em breve: treinamento em desenvolvimento.
+                    </span>
+                  ) : null}
                 </span>
                 <span className={checked ? 'status-pill status-pill-success' : 'status-pill status-pill-muted'}>
                   {checked ? 'Liberado' : 'Bloqueado'}
@@ -866,7 +872,7 @@ export default function OrganizationDetails() {
               onChange={(event) =>
                 setAdminForm((current) => ({ ...current, name: event.target.value }))
               }
-              placeholder="Ex.: Usuário 05"
+              placeholder="Ex.: Maria Silva"
             />
           </div>
 

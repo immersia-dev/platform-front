@@ -29,6 +29,15 @@ function getVisiblePages(page: number, totalPages: number) {
   return [page - 2, page - 1, page, page + 1, page + 2];
 }
 
+const SINGULAR_LABELS: Record<string, string> = {
+  registros: 'registro',
+  alunos: 'aluno',
+  organizações: 'organização',
+  tentativas: 'tentativa',
+  turmas: 'turma',
+  usuários: 'usuário',
+};
+
 export default function TablePagination({
   page,
   totalPages,
@@ -44,7 +53,10 @@ export default function TablePagination({
   return (
     <div className="table-pagination">
       <p className="table-pagination-summary">
-        Mostrando {start}-{end} de {totalItems} {itemLabel}
+        Mostrando {start}-{end} de {totalItems}{' '}
+        {totalItems === 1
+          ? (SINGULAR_LABELS[itemLabel] ?? itemLabel)
+          : itemLabel}
       </p>
 
       <div className="table-pagination-controls">

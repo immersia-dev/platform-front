@@ -16,7 +16,7 @@ import { getDefaultAppPath } from '../auth/getDefaultAppPath';
 import { useAuth } from '../auth/useAuth';
 import LanguageSelect from '../components/LanguageSelect';
 import { getApiErrorMessage } from '../lib/apiClient';
-import { areDevProfilesEnabled } from '../lib/devProfiles';
+import { areDevProfilesEnabled, devProfileLinks } from '../lib/devProfiles';
 import { DEMO_PASSWORD, isDemoMode } from '../lib/demoMode';
 import { roleLabels, usersSeed, type AppRole } from '../data/mockPlatform';
 
@@ -50,7 +50,9 @@ const demoRoles: DemoRole[] = [
 ];
 
 function findDemoUser(role: AppRole) {
-  return usersSeed.find((seedUser) => seedUser.role === role && seedUser.status === 'active');
+  return usersSeed.find(
+    (seedUser) => seedUser.role === role && seedUser.status === 'active'
+  );
 }
 
 export default function Login() {
@@ -83,7 +85,10 @@ export default function Login() {
     setPendingRole(role);
 
     try {
-      const sessionUser = await signIn({ login: demoUser.email, password: DEMO_PASSWORD });
+      const sessionUser = await signIn({
+        login: demoUser.email,
+        password: DEMO_PASSWORD,
+      });
 
       if (sessionUser) {
         navigate(getDefaultAppPath(sessionUser.role), { replace: true });
@@ -151,7 +156,11 @@ export default function Login() {
       <div className="min-h-screen bg-black/10">
         <div className="mx-auto flex min-h-screen w-full max-w-6xl items-center justify-center px-4 py-10 sm:px-6 sm:py-12">
           <section
-            className={isDemoMode ? 'glass-card max-w-[560px]' : 'glass-card max-w-[460px]'}
+            className={
+              isDemoMode
+                ? 'glass-card max-w-[560px]'
+                : 'glass-card max-w-[460px]'
+            }
             aria-label="Tela de login"
           >
             <header className="mb-8 text-center">
@@ -213,8 +222,8 @@ export default function Login() {
                 </div>
 
                 <p className="text-center text-xs leading-5 text-white/40">
-                  Ambiente de demonstração com dados fictícios. As alterações que você fizer
-                  valem apenas nesta aba.
+                  Ambiente de demonstração com dados fictícios. As alterações
+                  que você fizer valem apenas nesta aba.
                 </p>
 
                 {languagePicker}
@@ -225,12 +234,14 @@ export default function Login() {
 
                 <div>
                   <label htmlFor={loginId} className="sr-only">
-                    E-mail
+                    {isDemoMode ? 'E-mail' : 'E-mail ou CPF'}
                   </label>
 
                   {submitted && login.trim().length === 0 ? (
                     <p className="field-error field-error-center field-error-top">
-                      Informe seu e-mail.
+                      {isDemoMode
+                        ? 'Informe seu e-mail.'
+                        : 'Informe seu e-mail ou CPF.'}
                     </p>
                   ) : null}
 
@@ -242,12 +253,16 @@ export default function Login() {
                     <input
                       id={loginId}
                       name="login"
-                      type="email"
-                      autoComplete="email"
+                      type={isDemoMode ? 'email' : 'text'}
+                      autoComplete="username"
                       value={login}
                       onChange={(event) => setLogin(event.target.value)}
-                      placeholder="E-mail"
-                      aria-invalid={submitted && login.trim().length === 0 ? 'true' : 'false'}
+                      placeholder={isDemoMode ? 'E-mail' : 'E-mail ou CPF'}
+                      aria-invalid={
+                        submitted && login.trim().length === 0
+                          ? 'true'
+                          : 'false'
+                      }
                       className={[
                         'pill-input py-3.5 pl-12 pr-4 text-sm sm:text-base',
                         submitted && login.trim().length === 0
@@ -282,7 +297,11 @@ export default function Login() {
                       value={password}
                       onChange={(event) => setPassword(event.target.value)}
                       placeholder="Senha"
-                      aria-invalid={submitted && password.trim().length === 0 ? 'true' : 'false'}
+                      aria-invalid={
+                        submitted && password.trim().length === 0
+                          ? 'true'
+                          : 'false'
+                      }
                       className={[
                         'pill-input py-3.5 pl-12 pr-4 text-sm sm:text-base',
                         submitted && password.trim().length === 0
@@ -293,17 +312,32 @@ export default function Login() {
                   </div>
                 </div>
 
-                <button type="submit" className="primary-btn mt-2 py-3.5" disabled={isSubmitting}>
+                <button
+                  type="submit"
+                  className="primary-btn mt-2 py-3.5"
+                  disabled={isSubmitting}
+                >
                   {isSubmitting ? 'Entrando...' : 'Entrar'}
                 </button>
 
                 {languagePicker}
 
                 {areDevProfilesEnabled() ? (
-                  <div className="border-t border-white/10 pt-4 text-center">
-                    <Link to="/dev" className="ghost-btn">
-                      Perfis de debug
-                    </Link>
+                  <div className="border-t border-white/10 pt-4">
+                    <p className="mb-2.5 text-center text-xs font-medium uppercase tracking-wide text-amber-200/70">
+                      Entrar como (desenvolvimento)
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      {devProfileLinks.map((profile) => (
+                        <Link
+                          key={profile.slug}
+                          to={`/dev/${profile.slug}`}
+                          className="ghost-btn justify-center px-3 py-2 text-sm"
+                        >
+                          {profile.label}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 ) : null}
               </form>

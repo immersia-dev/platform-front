@@ -9,6 +9,7 @@ import {
 
 import { type AppRole } from '../data/mockPlatform';
 import { loginWithApi, type ApiSessionUser } from '../lib/apiClient';
+import { setUnauthorizedHandler } from '../plataforma/api';
 
 type SessionUser = {
   id: string;
@@ -94,6 +95,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   const signOut = useCallback(() => {
     setSession(null);
+  }, []);
+
+  // token expirado ou revogado: volta para o login em vez de deixar as telas falhando
+  useEffect(() => {
+    setUnauthorizedHandler(() => setSession(null));
+    return () => setUnauthorizedHandler(null);
   }, []);
 
   const updateSessionUser = useCallback((userRecord: ApiSessionUser) => {

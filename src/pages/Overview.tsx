@@ -40,6 +40,8 @@ import {
   getRiskPillClass,
   type RiskLevel,
 } from '../lib/instructorAnalytics';
+import { pluralize } from '../lib/pluralize';
+import { getCatalogSummary, getModuleTrainingCount, isModuleComingSoon } from '../lib/studyPlatform';
 
 type SummaryCard = {
   label: string;
@@ -66,6 +68,11 @@ function formatLearningGain(value: number) {
 function getRoundedAverage(values: number[]) {
   if (!values.length) return 0;
   return Math.round(values.reduce((total, value) => total + value, 0) / values.length);
+}
+
+/** Percentual de nota, ou "—" quando ainda não existe tentativa para calcular. */
+function formatScore(value: number | null | undefined) {
+  return value === null || value === undefined ? '—' : `${value}%`;
 }
 
 function buildAttemptReport(item: AttemptDetails) {
@@ -114,7 +121,7 @@ function InstructorOverview({
     overallApprovalRate,
     averageResponseTime,
     learnerSpotlights,
-  } = getInstructorAnalytics(user.organizationId);
+  } = getInstructorAnalytics(user.organizationId, { instructorId: user.id });
 
   const attemptedLearnerIds = new Set(attempts.map((attempt) => attempt.learnerId));
   const learnersWithAttempts = learnersWithMetrics.filter((item) => item.attempts.length > 0);
@@ -132,7 +139,7 @@ function InstructorOverview({
         learnersWithAttempts.reduce((total, item) => total + item.averageScore, 0) /
           learnersWithAttempts.length
       )
-    : 0;
+    : null;
   const participationRate = learnersWithMetrics.length
     ? Math.round((attemptedLearnerIds.size / learnersWithMetrics.length) * 100)
     : 0;
@@ -142,20 +149,20 @@ function InstructorOverview({
       label: 'Turmas ativas',
       value: `${groupPerformance.length}`,
       caption: `${groupsNeedingSupport.length} em atenção`,
-      tooltip: 'Turmas ativas vinculadas à organização e acompanhadas pelo instrutor.',
+      tooltip: 'Turmas ativas em que você é o instrutor responsável.',
       icon: UsersRound,
     },
     {
       label: 'Alunos',
       value: `${learnersWithMetrics.length}`,
       caption: `${pendingLearners.length} sem execução`,
-      tooltip: 'Total de alunos monitorados nas turmas ativas da organização.',
+      tooltip: 'Alunos com vínculo ativo nas suas turmas.',
       icon: GraduationCap,
     },
     {
       label: 'Participação',
       value: `${participationRate}%`,
-      caption: `${attemptedLearnerIds.size}/${learnersWithMetrics.length} alunos`,
+      caption: `${attemptedLearnerIds.size}/${pluralize(learnersWithMetrics.length, 'aluno', 'alunos')}`,
       tooltip: 'Percentual de alunos que já possuem pelo menos uma tentativa registrada.',
       icon: Activity,
     },
@@ -168,8 +175,8 @@ function InstructorOverview({
     },
     {
       label: 'Média',
-      value: `${observedClassAverage}%`,
-      caption: 'Score médio.',
+      value: formatScore(observedClassAverage),
+      caption: 'Nota média.',
       tooltip: 'Média dos alunos com tentativas registradas. Alunos pendentes ficam fora deste cálculo.',
       icon: BarChart3,
     },
@@ -203,9 +210,9 @@ function InstructorOverview({
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="Learning analytics"
-        title="Dashboard de aprendizagem"
-        description="Visão consolidada da turma, com participação, desempenho e sinais de reforço."
+        eyebrow="Análise de aprendizagem"
+        title="Painel de aprendizagem"
+        description="Visão consolidada das suas turmas, com participação, desempenho e sinais de reforço."
         actions={
           <div className="flex flex-wrap gap-3">
             <Link to="/app/students" className="secondary-btn">
@@ -242,7 +249,7 @@ function InstructorOverview({
             </p>
           </div>
 
-          <span className="chip chip-muted">{recentAttempts.length} registros</span>
+          <span className="chip chip-muted">{pluralize(recentAttempts.length, 'registro', 'registros')}</span>
         </div>
 
         <div className="overflow-hidden">
@@ -316,7 +323,9 @@ function InstructorOverview({
               </p>
             </div>
 
-            <span className="chip chip-muted">{selectedTrendPoints.length} pontos de observação</span>
+            <span className="chip chip-muted">
+              {pluralize(selectedTrendPoints.length, 'ponto de observação', 'pontos de observação')}
+            </span>
           </div>
 
           <div className="mt-6 analytics-tabs" aria-label="Filtro de turma da série temporal">
@@ -348,7 +357,7 @@ function InstructorOverview({
               points={selectedTrendPoints.map((point) => ({
                 label: point.label,
                 value: point.averageScore,
-                note: `${point.attempts} tentativas`,
+                note: pluralize(point.attempts, 'tentativa', 'tentativas'),
               }))}
               valueSuffix="%"
             />
@@ -372,7 +381,7 @@ function InstructorOverview({
               <h3 className="mt-4 text-sm font-semibold text-white">Maior volume</h3>
               <p className="mt-2 text-sm text-white/60">
                 {mostActiveTrendPoint
-                  ? `${mostActiveTrendPoint.label} concentrou ${mostActiveTrendPoint.attempts} tentativas`
+                  ? `${mostActiveTrendPoint.label} concentrou ${pluralize(mostActiveTrendPoint.attempts, 'tentativa', 'tentativas')}`
                   : 'Sem volume suficiente para destacar.'}
               </p>
             </div>
@@ -384,7 +393,7 @@ function InstructorOverview({
               <h3 className="mt-4 text-sm font-semibold text-white">Recorte atual</h3>
               <p className="mt-2 text-sm text-white/60">
                 {selectedGroup
-                  ? `${selectedGroup.learners.length} alunos, ${selectedGroup.participationRate}% de participação.`
+                  ? `${pluralize(selectedGroup.learners.length, 'aluno', 'alunos')}, ${selectedGroup.participationRate}% de participação.`
                   : `Todas as turmas, ${participationRate}% de participação.`}
               </p>
             </div>
@@ -395,7 +404,7 @@ function InstructorOverview({
           <p className="section-kicker">Distribuição</p>
           <h2 className="mt-3 text-2xl font-semibold text-white">Faixas de desempenho</h2>
           <p className="mt-2 text-sm text-white/60">
-            Concentração das tentativas por faixa de score.
+            Concentração das tentativas por faixa de nota.
           </p>
 
           <div className="mt-8 space-y-4">
@@ -408,7 +417,9 @@ function InstructorOverview({
                   </div>
 
                   <div className="text-right">
-                    <p className="text-sm font-semibold text-white">{band.count} tentativas</p>
+                    <p className="text-sm font-semibold text-white">
+                      {pluralize(band.count, 'tentativa', 'tentativas')}
+                    </p>
                     <p className="mt-1 text-xs uppercase tracking-[0.18em] text-white/40">
                       {band.percentage}%
                     </p>
@@ -437,7 +448,7 @@ function InstructorOverview({
               <p className="text-xs uppercase tracking-[0.18em] text-white/45">Reforço</p>
               <p className="mt-3 text-3xl font-semibold text-white">{learnersNeedingSupport.length}</p>
               <p className="mt-2 text-sm text-white/55">
-                alunos com desempenho fora da faixa saudável.
+                {learnersNeedingSupport.length === 1 ? 'aluno' : 'alunos'} com desempenho fora da faixa saudável.
               </p>
             </div>
 
@@ -445,7 +456,7 @@ function InstructorOverview({
               <p className="text-xs uppercase tracking-[0.18em] text-white/45">Pendentes</p>
               <p className="mt-3 text-3xl font-semibold text-white">{pendingLearners.length}</p>
               <p className="mt-2 text-sm text-white/55">
-                alunos ainda sem tentativa registrada.
+                {pendingLearners.length === 1 ? 'aluno' : 'alunos'} ainda sem tentativa registrada.
               </p>
             </div>
           </div>
@@ -458,11 +469,13 @@ function InstructorOverview({
             <p className="section-kicker">Turmas</p>
             <h2 className="mt-3 text-2xl font-semibold text-white">Aprendizado por turma</h2>
             <p className="mt-2 text-sm text-white/60">
-              Comparativo de participação, evolução e necessidade de reforço por grupo ativo.
+              Comparativo de participação, evolução e necessidade de reforço por turma ativa.
             </p>
           </div>
 
-          <span className="chip chip-muted">{groupPerformance.length} turmas ativas</span>
+          <span className="chip chip-muted">
+            {pluralize(groupPerformance.length, 'turma ativa', 'turmas ativas')}
+          </span>
         </div>
 
         <div className="mt-8 grid gap-4 xl:grid-cols-2">
@@ -485,7 +498,9 @@ function InstructorOverview({
                 </div>
                 <div className="analytics-mini-metric">
                   <span className="analytics-mini-label">Média</span>
-                  <strong className="analytics-mini-value">{item.averageScore}%</strong>
+                  <strong className="analytics-mini-value">
+                    {formatScore(item.hasAttempts ? item.averageScore : null)}
+                  </strong>
                 </div>
                 <div className="analytics-mini-metric">
                   <span className="analytics-mini-label">Aprendizado</span>
@@ -498,10 +513,10 @@ function InstructorOverview({
               </div>
 
               <div className="mt-5 flex flex-wrap gap-3 text-xs font-medium uppercase tracking-[0.14em] text-white/45">
-                <span>{item.learners.length} alunos</span>
-                <span>{item.pendingLearners} pendentes</span>
-                <span>{item.attempts.length} execuções</span>
-                <span>{item.averageResponseTime} min médio</span>
+                <span>{pluralize(item.learners.length, 'aluno', 'alunos')}</span>
+                <span>{pluralize(item.pendingLearners, 'pendente', 'pendentes')}</span>
+                <span>{pluralize(item.attempts.length, 'execução', 'execuções')}</span>
+                <span>{item.averageResponseTime} min em média</span>
               </div>
 
               <div className="analytics-bar-track">
@@ -537,8 +552,8 @@ function InstructorOverview({
                   </div>
 
                   <div className="analytics-row-meta">
-                    <span>{item.attempts.length} tentativas</span>
-                    <span>{item.learnersReached} alunos</span>
+                    <span>{pluralize(item.attempts.length, 'tentativa', 'tentativas')}</span>
+                    <span>{pluralize(item.learnersReached, 'aluno', 'alunos')}</span>
                     <span>{item.averageResponseTime} min</span>
                   </div>
                 </div>
@@ -546,11 +561,15 @@ function InstructorOverview({
                 <div className="mt-5 grid gap-3 md:grid-cols-3">
                   <div className="analytics-mini-metric">
                     <span className="analytics-mini-label">Média</span>
-                    <strong className="analytics-mini-value">{item.averageScore}%</strong>
+                    <strong className="analytics-mini-value">
+                      {formatScore(item.attempts.length ? item.averageScore : null)}
+                    </strong>
                   </div>
                   <div className="analytics-mini-metric">
                     <span className="analytics-mini-label">Aprovação</span>
-                    <strong className="analytics-mini-value">{item.approvalRate}%</strong>
+                    <strong className="analytics-mini-value">
+                      {formatScore(item.attempts.length ? item.approvalRate : null)}
+                    </strong>
                   </div>
                   <div className="analytics-mini-metric">
                     <span className="analytics-mini-label">Alcance</span>
@@ -590,9 +609,10 @@ function InstructorOverview({
               <Link
                 key={item.learnerId}
                 to={`/app/students/${item.learnerId}`}
-                className="analytics-student-row"
+                className="analytics-student-row xl:flex-col xl:items-stretch xl:justify-start"
+                title={item.learnerName}
               >
-                <div className="flex min-w-0 items-center gap-4">
+                <div className="flex min-w-0 flex-1 items-center gap-4">
                   <div className="analytics-student-avatar">
                     {item.learnerName
                       .split(' ')
@@ -602,8 +622,8 @@ function InstructorOverview({
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-3">
-                      <p className="truncate text-sm font-semibold text-white">{item.learnerName}</p>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <p className="break-words text-sm font-semibold text-white">{item.learnerName}</p>
                       {item.attempts > 0 ? (
                         <span className={getRiskPillClass(item.risk)}>{getRiskLabel(item.risk)}</span>
                       ) : (
@@ -614,16 +634,16 @@ function InstructorOverview({
                     <div className="mt-2 analytics-student-progress">
                       <div
                         className="analytics-student-progress-fill"
-                        style={{ width: `${Math.max(item.averageScore, 8)}%` }}
+                        style={{ width: `${item.attempts ? Math.max(item.averageScore, 8) : 0}%` }}
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="analytics-student-stats">
-                  <span>{item.averageScore}% média</span>
-                  <span>{item.attempts} tentativas</span>
-                  <span>{item.responseTime} min</span>
+                <div className="analytics-student-stats xl:justify-start">
+                  <span>{item.attempts ? `${item.averageScore}% de média` : 'Sem média'}</span>
+                  <span>{pluralize(item.attempts, 'tentativa', 'tentativas')}</span>
+                  {item.attempts ? <span>{item.responseTime} min</span> : null}
                 </div>
               </Link>
             ))}
@@ -744,8 +764,9 @@ function OrgAdminOverview({
         ? Math.round((rowAttemptedLearners / learnerIds.size) * 100)
         : 0;
       const rowSupport = assignedGroups.reduce((total, item) => total + item.learnersNeedingSupport, 0);
-      const risk: RiskLevel =
-        assignedGroups.length > 2 || rowSupport > 2 || rowParticipation < 50
+      const risk: RiskLevel | null = !assignedGroups.length
+        ? null
+        : assignedGroups.length > 2 || rowSupport > 2 || rowParticipation < 50
           ? 'critical'
           : rowSupport > 0 || rowParticipation < 80
             ? 'attention'
@@ -776,7 +797,7 @@ function OrgAdminOverview({
             participationRate: getRoundedAverage(unassignedGroups.map((item) => item.participationRate)),
             averageScore: getRoundedAverage(unassignedGroups.map((item) => item.averageScore)),
             supportCount: unassignedGroups.reduce((total, item) => total + item.learnersNeedingSupport, 0),
-            risk: 'attention' as RiskLevel,
+            risk: 'attention' as RiskLevel | null,
           },
         ]
       : []),
@@ -787,28 +808,40 @@ function OrgAdminOverview({
     pendingLearners.length
       ? {
           title: 'Alunos sem execução',
-          description: `${pendingLearners.length} alunos ainda não iniciaram nenhum treinamento.`,
+          description:
+            pendingLearners.length === 1
+              ? '1 aluno ainda não iniciou nenhum treinamento.'
+              : `${pendingLearners.length} alunos ainda não iniciaram nenhum treinamento.`,
           to: '/app/students',
         }
       : null,
     learnersNeedingSupport.length
       ? {
           title: 'Reforço necessário',
-          description: `${learnersNeedingSupport.length} alunos estão fora da faixa saudável de desempenho.`,
+          description:
+            learnersNeedingSupport.length === 1
+              ? '1 aluno está fora da faixa saudável de desempenho.'
+              : `${learnersNeedingSupport.length} alunos estão fora da faixa saudável de desempenho.`,
           to: '/app/students',
         }
       : null,
     groupsNeedingSupport.length
       ? {
           title: 'Turmas em atenção',
-          description: `${groupsNeedingSupport.length} turmas precisam de acompanhamento mais próximo.`,
+          description:
+            groupsNeedingSupport.length === 1
+              ? '1 turma precisa de acompanhamento mais próximo.'
+              : `${groupsNeedingSupport.length} turmas precisam de acompanhamento mais próximo.`,
           to: '/app/groups',
         }
       : null,
     modulesWithoutAttempts.length
       ? {
           title: 'Módulos sem uso',
-          description: `${modulesWithoutAttempts.length} módulos liberados ainda não possuem execuções.`,
+          description:
+            modulesWithoutAttempts.length === 1
+              ? '1 módulo liberado ainda não possui execuções.'
+              : `${modulesWithoutAttempts.length} módulos liberados ainda não possuem execuções.`,
           to: '/app/studies',
         }
       : null,
@@ -825,7 +858,7 @@ function OrgAdminOverview({
     {
       label: 'Turmas ativas',
       value: `${groupPerformance.length}`,
-      caption: `${archivedGroups.length} arquivadas`,
+      caption: pluralize(archivedGroups.length, 'arquivada', 'arquivadas'),
       tooltip: 'Turmas ativas da organização, além do histórico arquivado.',
       icon: UsersRound,
     },
@@ -839,15 +872,16 @@ function OrgAdminOverview({
     {
       label: 'Participação',
       value: `${participationRate}%`,
-      caption: `${attemptedLearnerIds.size}/${learners.length} alunos`,
+      caption: `${attemptedLearnerIds.size}/${pluralize(learners.length, 'aluno', 'alunos')}`,
       tooltip: 'Percentual de alunos que já executaram pelo menos um treinamento.',
       icon: Activity,
     },
     {
       label: 'Média geral',
-      value: `${classAverage}%`,
-      caption: 'Score consolidado.',
-      tooltip: 'Média consolidada das execuções registradas na organização.',
+      value: formatScore(classAverage),
+      caption: 'Nota consolidada.',
+      tooltip:
+        'Média dos alunos que já possuem tentativas registradas. Alunos sem execução ficam fora deste cálculo.',
       icon: BarChart3,
     },
     {
@@ -907,7 +941,7 @@ function OrgAdminOverview({
 
       <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <article className="admin-card">
-          <p className="section-kicker">Burndown</p>
+          <p className="section-kicker">Evolução das pendências</p>
           <h2 className="mt-3 text-2xl font-semibold text-white">Pendências de execução</h2>
           <p className="mt-2 text-sm text-white/60">
             Percentual de alunos que ainda não possuem tentativa registrada ao longo da janela observada.
@@ -917,7 +951,7 @@ function OrgAdminOverview({
             <AnalyticsLineChart
               points={burndownPoints}
               valueSuffix="%"
-              emptyLabel="Sem execuções suficientes para calcular o burndown."
+              emptyLabel="Sem execuções suficientes para calcular a evolução das pendências."
             />
           </div>
         </article>
@@ -960,7 +994,9 @@ function OrgAdminOverview({
               Quantidade de turmas, alunos e sinais de reforço por responsável.
             </p>
           </div>
-          <span className="chip chip-muted">{instructorRows.length} responsáveis</span>
+          <span className="chip chip-muted">
+            {pluralize(instructorRows.length, 'responsável', 'responsáveis')}
+          </span>
         </div>
 
         <div className="overflow-x-auto">
@@ -986,10 +1022,14 @@ function OrgAdminOverview({
                   <td>{row.groups.length}</td>
                   <td>{row.learnerCount}</td>
                   <td>{row.participationRate}%</td>
-                  <td>{row.averageScore ? `${row.averageScore}%` : '-'}</td>
+                  <td>{row.attempts.length ? `${row.averageScore}%` : '—'}</td>
                   <td>{row.supportCount}</td>
                   <td>
-                    <span className={getRiskPillClass(row.risk)}>{getRiskLabel(row.risk)}</span>
+                    {row.risk ? (
+                      <span className={getRiskPillClass(row.risk)}>{getRiskLabel(row.risk)}</span>
+                    ) : (
+                      <span className="status-pill status-pill-muted">Sem turmas</span>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -1028,7 +1068,9 @@ function OrgAdminOverview({
                   </div>
                   <div className="analytics-mini-metric">
                     <span className="analytics-mini-label">Média</span>
-                    <strong className="analytics-mini-value">{item.averageScore}%</strong>
+                    <strong className="analytics-mini-value">
+                      {formatScore(item.hasAttempts ? item.averageScore : null)}
+                    </strong>
                   </div>
                   <div className="analytics-mini-metric">
                     <span className="analytics-mini-label">Reforço</span>
@@ -1054,7 +1096,9 @@ function OrgAdminOverview({
                   <div>
                     <h3 className="text-lg font-semibold text-white">{item.module.name}</h3>
                   </div>
-                  <span className="chip chip-muted">{item.attempts.length} execuções</span>
+                  <span className="chip chip-muted">
+                    {pluralize(item.attempts.length, 'execução', 'execuções')}
+                  </span>
                 </div>
 
                 <div className="mt-5 grid gap-3 md:grid-cols-3">
@@ -1064,11 +1108,15 @@ function OrgAdminOverview({
                   </div>
                   <div className="analytics-mini-metric">
                     <span className="analytics-mini-label">Média</span>
-                    <strong className="analytics-mini-value">{item.averageScore}%</strong>
+                    <strong className="analytics-mini-value">
+                      {formatScore(item.attempts.length ? item.averageScore : null)}
+                    </strong>
                   </div>
                   <div className="analytics-mini-metric">
                     <span className="analytics-mini-label">Aprovação</span>
-                    <strong className="analytics-mini-value">{item.approvalRate}%</strong>
+                    <strong className="analytics-mini-value">
+                      {formatScore(item.attempts.length ? item.approvalRate : null)}
+                    </strong>
                   </div>
                 </div>
 
@@ -1092,7 +1140,7 @@ function OrgAdminOverview({
               Últimas tentativas registradas para auditoria rápida da operação.
             </p>
           </div>
-          <span className="chip chip-muted">{averageResponseTime} min médio</span>
+          <span className="chip chip-muted">{averageResponseTime} min em média</span>
         </div>
 
         <div className="overflow-hidden">
@@ -1132,7 +1180,7 @@ function OrgAdminOverview({
 
 function getOrganizationStatusLabel(status: string) {
   if (status === 'active') return 'Ativa';
-  if (status === 'onboarding') return 'Onboarding';
+  if (status === 'onboarding') return 'Em implantação';
   return 'Desativada';
 }
 
@@ -1158,19 +1206,20 @@ function SuperAdminOverview() {
   const organizationsWithModules = organizationsSeed.filter((organization) =>
     modulesSeed.some((module) => module.organizationIds.includes(organization.id))
   );
+  const catalog = getCatalogSummary();
 
   const summaryCards = [
     {
       label: 'Organizações',
       value: `${organizationsSeed.length}`,
-      caption: `${activeOrganizations.length} ativas`,
+      caption: pluralize(activeOrganizations.length, 'ativa', 'ativas'),
       tooltip: 'Organizações clientes cadastradas na plataforma.',
       icon: Building2,
     },
     {
-      label: 'Onboarding',
+      label: 'Em implantação',
       value: `${onboardingOrganizations.length}`,
-      caption: `${inactiveOrganizations.length} desativadas`,
+      caption: pluralize(inactiveOrganizations.length, 'desativada', 'desativadas'),
       tooltip: 'Organizações em implantação ou com acesso pausado.',
       icon: ShieldCheck,
     },
@@ -1184,7 +1233,7 @@ function SuperAdminOverview() {
     {
       label: 'Usuários',
       value: `${usersSeed.length}`,
-      caption: `${learners.length} alunos`,
+      caption: pluralize(learners.length, 'aluno', 'alunos'),
       tooltip: 'Perfis cadastrados entre Immersia, organizações, instrutores e alunos.',
       icon: Users,
     },
@@ -1197,23 +1246,23 @@ function SuperAdminOverview() {
     },
     {
       label: 'Módulos',
-      value: `${modulesSeed.length}`,
-      caption: `${moduleReleaseCount} liberações`,
-      tooltip: 'Módulos do catálogo e quantidade de liberações para organizações.',
+      value: `${catalog.modules}`,
+      caption: `${pluralize(catalog.activeModules, 'ativo', 'ativos')} · ${catalog.comingSoonModules} em breve`,
+      tooltip: 'Módulos do catálogo: ativos (com treinamento disponível) e em breve (em desenvolvimento).',
       icon: BookOpenText,
     },
     {
       label: 'Cobertura',
       value: `${Math.round((organizationsWithModules.length / Math.max(organizationsSeed.length, 1)) * 100)}%`,
-      caption: `${organizationsWithModules.length}/${organizationsSeed.length} organizações`,
+      caption: `${organizationsWithModules.length}/${pluralize(organizationsSeed.length, 'organização', 'organizações')}`,
       tooltip: 'Percentual de organizações com pelo menos um módulo liberado.',
       icon: Activity,
     },
     {
-      label: 'Catálogo',
-      value: `${modulesSeed.reduce((total, module) => total + module.trainings.length, 0)}`,
-      caption: 'Treinamentos VR.',
-      tooltip: 'Total de treinamentos disponíveis no catálogo de estudos.',
+      label: 'Treinamentos VR',
+      value: `${catalog.trainings}`,
+      caption: `${pluralize(catalog.availableTrainings, 'disponível', 'disponíveis')} · ${catalog.comingSoonTrainings} em breve`,
+      tooltip: 'Treinamentos VR do catálogo de estudos, os mesmos listados em Estudos.',
       icon: BookOpenText,
     },
   ];
@@ -1355,13 +1404,22 @@ function SuperAdminOverview() {
               Visão rápida de quantas organizações possuem acesso a cada módulo do catálogo.
             </p>
           </div>
-          <span className="chip chip-muted">{moduleReleaseCount} liberações ativas</span>
+          <span className="chip chip-muted">
+            {pluralize(moduleReleaseCount, 'liberação ativa', 'liberações ativas')}
+          </span>
         </div>
 
         <div className="mt-8 grid gap-4 xl:grid-cols-3">
           {modulesSeed.map((module) => (
             <article key={module.id} className="analytics-row">
-              <h3 className="text-lg font-semibold text-white">{module.name}</h3>
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="text-lg font-semibold text-white">{module.name}</h3>
+                {isModuleComingSoon(module.id) ? (
+                  <span className="status-pill status-pill-muted">Em breve</span>
+                ) : (
+                  <span className="status-pill status-pill-success">Ativo</span>
+                )}
+              </div>
               <p className="mt-2 text-sm text-white/55">{module.summary}</p>
 
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -1371,7 +1429,7 @@ function SuperAdminOverview() {
                 </div>
                 <div className="analytics-mini-metric">
                   <span className="analytics-mini-label">Treinamentos</span>
-                  <strong className="analytics-mini-value">{module.trainings.length}</strong>
+                  <strong className="analytics-mini-value">{getModuleTrainingCount(module.id)}</strong>
                 </div>
               </div>
             </article>

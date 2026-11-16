@@ -38,6 +38,7 @@ import {
   getTrackById,
   getTrackCatalogItem,
   getTrackLessons,
+  isModuleComingSoon,
 } from '../lib/studyPlatform';
 import { useLessonProgress } from '../study/useLessonProgress';
 
@@ -50,7 +51,7 @@ function formatDuration(minutes: number) {
 }
 
 function getProgressLabel(percent: number) {
-  if (percent === 100) return 'Concluida';
+  if (percent === 100) return 'Concluída';
   if (percent > 0) return 'Em andamento';
   return 'Pendente';
 }
@@ -62,7 +63,7 @@ function getProgressPillClass(percent: number) {
 }
 
 function getLessonStatusLabel(status: string) {
-  if (status === 'completed') return 'Concluida';
+  if (status === 'completed') return 'Concluída';
   if (status === 'in_progress') return 'Em andamento';
   return 'Pendente';
 }
@@ -119,8 +120,8 @@ export default function StudyTrackDetails() {
     return (
       <div className="space-y-6">
         <PageHeader
-          title="Trilha nao encontrada"
-          description="A trilha solicitada nao esta disponivel para o seu perfil."
+          title="Trilha não encontrada"
+          description="A trilha solicitada não está disponível para o seu perfil."
           actions={
             <Link to="/app/studies" className="secondary-btn">
               <ArrowLeft className="h-4 w-4" />
@@ -149,7 +150,8 @@ export default function StudyTrackDetails() {
         ) / visibleGroups.length
       )
     : 0;
-  const progressPercent = learnerProgress?.percent ?? averageGroupProgress;
+  const progressPercent = learnerProgress?.percent ?? 0;
+  const moduleComingSoon = isModuleComingSoon(track.moduleId);
 
   function handleOpenMaterial(url: string) {
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -205,7 +207,7 @@ export default function StudyTrackDetails() {
       await navigator.clipboard.writeText(details);
       setCopyStatus('Dados copiados.');
     } catch {
-      setCopyStatus('Nao foi possivel copiar automaticamente.');
+      setCopyStatus('Não foi possível copiar automaticamente.');
     }
   }
 
@@ -229,39 +231,57 @@ export default function StudyTrackDetails() {
           <h2 className="mt-3 text-3xl font-semibold text-white">{track.title}</h2>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-white/65">{track.summary}</p>
 
-          <div className="analytics-bar-track mt-8">
-            <div className="analytics-bar-fill" style={{ width: `${progressPercent}%` }} />
-          </div>
+          {learnerProgress ? (
+            <>
+              <div className="analytics-bar-track mt-8">
+                <div className="analytics-bar-fill" style={{ width: `${progressPercent}%` }} />
+              </div>
 
-          <div className="mt-4 flex flex-wrap gap-3">
-            <span className={getProgressPillClass(progressPercent)}>
-              {getProgressLabel(progressPercent)}
-            </span>
-            <span className="chip chip-muted">{progressPercent}% concluido</span>
-            <span className="chip chip-muted">{formatDuration(catalogItem.durationMinutes)}</span>
-          </div>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <span className={getProgressPillClass(progressPercent)}>
+                  {getProgressLabel(progressPercent)}
+                </span>
+                <span className="chip chip-muted">{progressPercent}% concluído</span>
+                <span className="chip chip-muted">{formatDuration(catalogItem.durationMinutes)}</span>
+              </div>
+            </>
+          ) : (
+            <div className="mt-8 flex flex-wrap gap-3">
+              {moduleComingSoon ? (
+                <span className="status-pill status-pill-muted">Em breve</span>
+              ) : (
+                <span className="status-pill status-pill-success">Disponível</span>
+              )}
+              <span className="chip chip-muted">{formatDuration(catalogItem.durationMinutes)}</span>
+              {visibleGroups.length ? (
+                <span className="chip chip-muted">
+                  Média das turmas: {averageGroupProgress}% concluído
+                </span>
+              ) : null}
+            </div>
+          )}
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <StatCard
             label="Aulas"
             value={`${lessons.length}`}
-            caption="Obrigatorias."
-            tooltip="Quantidade de aulas que compoem esta trilha."
+            caption="Obrigatórias."
+            tooltip="Quantidade de aulas que compõem esta trilha."
             icon={BookOpenCheck}
           />
           <StatCard
             label="Materiais"
             value={`${catalogItem.materialCount}`}
-            caption="PDF, video, imagem ou link."
-            tooltip="Materiais de estudo incluidos na trilha."
+            caption="PDF, vídeo, imagem ou link."
+            tooltip="Materiais de estudo incluídos na trilha."
             icon={FileText}
           />
           <StatCard
-            label="Praticas"
+            label="Práticas"
             value={`${catalogItem.trainingCount}`}
-            caption="Web ou Meta."
-            tooltip="Atividades imersivas incluidas na trilha."
+            caption="Treinamentos VR."
+            tooltip="Atividades imersivas incluídas na trilha."
             icon={Play}
           />
           <StatCard
@@ -276,7 +296,7 @@ export default function StudyTrackDetails() {
 
       <section className="admin-card">
         <p className="section-kicker">Aulas</p>
-        <h2 className="mt-3 text-2xl font-semibold text-white">Sequencia da trilha</h2>
+        <h2 className="mt-3 text-2xl font-semibold text-white">Sequência da trilha</h2>
 
         {progressError ? (
           <div className="mt-6 rounded-[20px] border border-rose-300/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
@@ -377,7 +397,7 @@ export default function StudyTrackDetails() {
                             }
                           >
                             <CheckCircle2 className="h-4 w-4" />
-                            {lessonStatus === 'completed' ? 'Aula concluida' : 'Concluir aula'}
+                            {lessonStatus === 'completed' ? 'Aula concluída' : 'Concluir aula'}
                           </button>
                         ) : null}
                       </>
@@ -402,13 +422,19 @@ export default function StudyTrackDetails() {
                           <Play className="h-4 w-4" />
                           {launchingLessonId === lesson.id
                             ? 'Abrindo...'
-                            : training.launchType === 'meta_app'
-                              ? 'Abrir app Meta'
-                              : 'Abrir treinamento'}
+                            : !canLaunchTraining && moduleComingSoon
+                              ? 'Em breve'
+                              : training.launchType === 'meta_app'
+                                ? 'Abrir no Meta Quest'
+                                : 'Abrir treinamento'}
                         </button>
 
                         {!canLaunchTraining ? (
-                          <p className="text-sm text-white/45">Canal de execucao indisponivel.</p>
+                          <p className="text-sm text-white/45">
+                            {moduleComingSoon
+                              ? 'Treinamento em desenvolvimento, disponível em breve.'
+                              : 'Canal de execução indisponível.'}
+                          </p>
                         ) : null}
 
                         {user.role !== 'learner' && resultPath ? (
@@ -443,7 +469,7 @@ export default function StudyTrackDetails() {
                 <tr>
                   <th>Turma</th>
                   <th>Alunos</th>
-                  <th>Concluidos</th>
+                  <th>Concluídos</th>
                   <th>Em andamento</th>
                   <th>Pendentes</th>
                   <th>Progresso</th>
@@ -492,11 +518,11 @@ export default function StudyTrackDetails() {
           <div className="dialog-panel max-w-2xl">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="section-kicker">App Meta</p>
+                <p className="section-kicker">Meta Quest (app Immersia)</p>
                 <h2 className="mt-3 text-2xl font-semibold text-white">{metaLaunch.lessonTitle}</h2>
                 <p className="mt-2 text-sm leading-6 text-white/60">
-                  Use o deep link abaixo no headset. Ao finalizar, o app deve enviar o resultado
-                  para o callback autenticado da plataforma.
+                  Coloque o Meta Quest e abra o app Immersia pelo link abaixo. Ao finalizar, o
+                  resultado é enviado automaticamente para a plataforma.
                 </p>
               </div>
               <button
@@ -511,7 +537,7 @@ export default function StudyTrackDetails() {
 
             <div className="mt-6 space-y-4">
               <div className="readonly-field">
-                <span className="readonly-field-label">Deep link</span>
+                <span className="readonly-field-label">Link de abertura</span>
                 <span className="mt-2 block break-all text-sm font-semibold text-white">
                   {metaLaunch.launchUrl}
                 </span>
@@ -523,7 +549,7 @@ export default function StudyTrackDetails() {
                 </span>
               </div>
               <div className="readonly-field">
-                <span className="readonly-field-label">Contrato</span>
+                <span className="readonly-field-label">Versão do contrato</span>
                 <span className="mt-2 block text-sm font-semibold text-white">
                   {metaLaunch.contractVersion}
                 </span>
@@ -545,7 +571,7 @@ export default function StudyTrackDetails() {
                 }}
               >
                 <Smartphone className="h-4 w-4" />
-                Abrir app Meta
+                Abrir no Meta Quest
               </button>
             </div>
           </div>

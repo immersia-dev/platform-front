@@ -16,8 +16,13 @@ import StudentDetails from './pages/StudentDetails';
 import Students from './pages/Students';
 import TrainingResults from './pages/TrainingResults';
 import Users from './pages/Users';
+import { isDemoMode } from './lib/demoMode';
+import PlatformApp from './plataforma/PlatformApp';
 
 export default function App() {
+  // contra a API real (platform-back) a plataforma usa as telas novas; o modo demonstração mantém a vitrine
+  if (!isDemoMode) return <PlatformApp />;
+
   return (
     <Routes>
       <Route path="/" element={<Login />} />

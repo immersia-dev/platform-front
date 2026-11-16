@@ -17,7 +17,12 @@ import {
   type StudentGroupRecord,
   type StudentGroupStatus,
 } from '../data/mockPlatform';
-import { getRiskLabel, getRiskPillClass, type RiskLevel } from '../lib/instructorAnalytics';
+import {
+  assessGroupRiskFromAttempts,
+  getRiskLabel,
+  getRiskPillClass,
+} from '../lib/instructorAnalytics';
+import { pluralize } from '../lib/pluralize';
 import {
   getAssignedTracksForGroup,
   getAvailableTracksForOrganization,
@@ -30,24 +35,6 @@ const PAGE_SIZE = 6;
 function getAverage(values: number[]) {
   if (!values.length) return 0;
   return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
-}
-
-function getGroupRisk(
-  averageScore: number,
-  participationRate: number,
-  learnersNeedingSupport: number,
-  trackCompletionRate: number
-): RiskLevel {
-  if (averageScore < 70 || participationRate < 50 || trackCompletionRate < 50) return 'critical';
-  if (
-    averageScore < 80 ||
-    participationRate < 80 ||
-    trackCompletionRate < 80 ||
-    learnersNeedingSupport > 0
-  ) {
-    return 'attention';
-  }
-  return 'healthy';
 }
 
 function getGroupStatusLabel(status: StudentGroupStatus) {
@@ -82,9 +69,6 @@ export default function Groups() {
   const currentUserRecord = usersSeed.find(
     (record) => record.email === user?.email && record.organizationId === organizationId
   );
-  const organizationLearners = usersSeed.filter(
-    (record) => record.organizationId === organizationId && record.role === 'learner'
-  );
   const organizationGroups = groups.filter((group) => {
     if (group.organizationId !== organizationId) return false;
     if (user?.role !== 'instructor') return true;
@@ -93,6 +77,22 @@ export default function Groups() {
   const organizationTracks = getAvailableTracksForOrganization(organizationId);
   const activeMemberships = studentGroupMembershipsSeed.filter(
     (membership) => membership.status === 'active'
+  );
+  // Instrutor vê apenas os alunos das próprias turmas ativas; admin vê a organização toda.
+  const instructorLearnerIds = new Set(
+    activeMemberships
+      .filter((membership) =>
+        organizationGroups.some(
+          (group) => group.id === membership.groupId && group.status === 'active'
+        )
+      )
+      .map((membership) => membership.learnerId)
+  );
+  const organizationLearners = usersSeed.filter(
+    (record) =>
+      record.organizationId === organizationId &&
+      record.role === 'learner' &&
+      (user?.role !== 'instructor' || instructorLearnerIds.has(record.id))
   );
 
   const rows = organizationGroups.map((group) => {
@@ -111,12 +111,12 @@ export default function Groups() {
       if (!learnerAttempts.length) return false;
       return getAverage(learnerAttempts.map((attempt) => attempt.score)) < 80;
     }).length;
-    const risk = getGroupRisk(
-      averageScore,
-      participationRate,
-      learnersNeedingSupport,
-      trackCompletionRate
-    );
+    // Turma arquivada não recebe risco; nas ativas o risco vem de média baixa,
+    // alunos reprovando e alunos sem execução (mesma regra do painel).
+    const riskAssessment =
+      group.status === 'active'
+        ? assessGroupRiskFromAttempts([...memberIds], attempts)
+        : null;
 
     return {
       group,
@@ -127,7 +127,7 @@ export default function Groups() {
       assignedTracks,
       trackCompletionRate,
       learnersNeedingSupport,
-      risk,
+      riskAssessment,
     };
   });
 
@@ -223,8 +223,16 @@ export default function Groups() {
         <StatCard
           label="Alunos"
           value={`${organizationLearners.length}`}
-          caption="Alunos cadastrados na organização."
-          tooltip="Total de alunos disponíveis para vínculo em turmas da organização."
+          caption={
+            user?.role === 'instructor'
+              ? 'Alunos das suas turmas ativas.'
+              : 'Alunos cadastrados na organização.'
+          }
+          tooltip={
+            user?.role === 'instructor'
+              ? 'Alunos com vínculo ativo nas turmas em que você é o instrutor.'
+              : 'Total de alunos disponíveis para vínculo em turmas da organização.'
+          }
           icon={GraduationCap}
         />
 
@@ -242,7 +250,9 @@ export default function Groups() {
           <div>
             <h2 className="text-lg font-semibold text-white">Turmas cadastradas</h2>
             <p className="mt-1 text-sm text-white/60">
-              Exibindo {filteredRows.length} de {organizationGroups.length} turmas da organização.
+              {user?.role === 'instructor'
+                ? `Exibindo ${filteredRows.length} de ${pluralize(organizationGroups.length, 'turma sob sua responsabilidade', 'turmas sob sua responsabilidade')}.`
+                : `Exibindo ${filteredRows.length} de ${organizationGroups.length} turmas da organização.`}
             </p>
           </div>
 
@@ -311,11 +321,22 @@ export default function Groups() {
                       {row.assignedTracks.length}
                     </div>
                   </td>
-                  <td>{row.participationRate}%</td>
-                  <td>{row.trackCompletionRate}%</td>
-                  <td>{row.averageScore ? `${row.averageScore}%` : '-'}</td>
+                  <td>{row.memberships.length ? `${row.participationRate}%` : '—'}</td>
+                  <td>{row.assignedTracks.length ? `${row.trackCompletionRate}%` : '—'}</td>
+                  <td>{row.attempts.length ? `${row.averageScore}%` : '—'}</td>
                   <td>
-                    <span className={getRiskPillClass(row.risk)}>{getRiskLabel(row.risk)}</span>
+                    {row.riskAssessment ? (
+                      <span
+                        className={getRiskPillClass(row.riskAssessment.risk)}
+                        title={row.riskAssessment.reason}
+                      >
+                        {getRiskLabel(row.riskAssessment.risk)}
+                      </span>
+                    ) : (
+                      <span className="text-white/40" title="Turma arquivada: sem avaliação de risco.">
+                        —
+                      </span>
+                    )}
                   </td>
                   <td>
                     <div className="table-actions table-actions-centered">

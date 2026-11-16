@@ -3,7 +3,11 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 
 import { useAuth } from '../auth/useAuth';
 import { usePlatformData } from '../data/PlatformDataContext';
-import { modulesSeed, type LaunchType, type MaterialKind } from '../data/mockPlatform';
+import {
+  modulesSeed,
+  type LaunchType,
+  type MaterialKind,
+} from '../data/mockPlatform';
 import { createStudyPackage, getApiErrorMessage } from '../lib/apiClient';
 
 type FieldProps = {
@@ -32,16 +36,28 @@ function Field({ label, children }: FieldProps) {
   );
 }
 
+function GeneratedIdentifier({ value }: { value: string }) {
+  return (
+    <div className="profile-field">
+      <span className="field-label">Identificador (gerado do título)</span>
+      <div
+        className="admin-input flex items-center text-white/55"
+        aria-live="polite"
+      >
+        {value || 'Preencha o título'}
+      </div>
+    </div>
+  );
+}
+
 function createInitialForm(firstModuleId: string) {
   return {
     moduleMode: 'existing' as ModuleMode,
     moduleId: firstModuleId,
     moduleName: '',
-    moduleSlug: '',
     moduleSummary: '',
     moduleIsActive: true,
     trackTitle: '',
-    trackSlug: '',
     trackSummary: '',
     trackLevel: 'introductory' as 'introductory' | 'operational' | 'advanced',
     trackImageUrl: '',
@@ -51,21 +67,14 @@ function createInitialForm(firstModuleId: string) {
     materialDescription: '',
     materialUrl: '',
     materialThumbnailUrl: '',
-    materialLessonTitle: '',
-    materialLessonDescription: '',
     materialDurationMinutes: 8,
     materialRequired: true,
     trainingTitle: '',
     trainingDescription: '',
     trainingMinutes: 10,
-    trainingLaunchType: 'web_url' as LaunchType,
+    trainingLaunchType: 'meta_app' as LaunchType,
     trainingLaunchUrl: '',
     trainingEnabled: true,
-    trainingImageUrl: '',
-    trainingLegacyId: '',
-    trainingLessonTitle: '',
-    trainingLessonDescription: '',
-    trainingDurationMinutes: 10,
     trainingRequired: true,
   };
 }
@@ -76,7 +85,9 @@ export default function StudyCatalogAdmin() {
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [form, setForm] = useState(() => createInitialForm(modulesSeed[0]?.id ?? ''));
+  const [form, setForm] = useState(() =>
+    createInitialForm(modulesSeed[0]?.id ?? '')
+  );
 
   useEffect(() => {
     const firstModuleId = modulesSeed[0]?.id ?? '';
@@ -100,14 +111,14 @@ export default function StudyCatalogAdmin() {
         moduleId: form.moduleId,
         module: {
           name: form.moduleName,
-          slug: form.moduleSlug,
+          slug: slugify(form.moduleName),
           summary: form.moduleSummary,
           isActive: form.moduleIsActive,
         },
         track: {
           moduleId: form.moduleId,
           title: form.trackTitle,
-          slug: form.trackSlug,
+          slug: slugify(form.trackTitle),
           summary: form.trackSummary,
           level: form.trackLevel,
           imageUrl: form.trackImageUrl,
@@ -119,8 +130,9 @@ export default function StudyCatalogAdmin() {
           description: form.materialDescription,
           url: form.materialUrl,
           thumbnailUrl: form.materialThumbnailUrl,
-          lessonTitle: form.materialLessonTitle,
-          lessonDescription: form.materialLessonDescription,
+          // A aula de material usa o mesmo título e descrição do material.
+          lessonTitle: form.materialTitle,
+          lessonDescription: form.materialDescription,
           durationMinutes: form.materialDurationMinutes,
           required: form.materialRequired,
         },
@@ -132,19 +144,28 @@ export default function StudyCatalogAdmin() {
           launchType: form.trainingLaunchType,
           launchUrl: form.trainingLaunchUrl,
           enabled: form.trainingEnabled,
-          imageUrl: form.trainingImageUrl,
-          legacyTrainingId: form.trainingLegacyId,
-          lessonTitle: form.trainingLessonTitle,
-          lessonDescription: form.trainingLessonDescription,
-          durationMinutes: form.trainingDurationMinutes,
+          // A prática usa a capa da trilha; o identificador legado não é exposto aqui.
+          imageUrl: form.trackImageUrl,
+          legacyTrainingId: '',
+          lessonTitle: form.trainingTitle,
+          lessonDescription: form.trainingDescription,
+          durationMinutes: form.trainingMinutes,
           required: form.trainingRequired,
         },
       });
       await platformData.refresh();
-      setStatusMessage('Jornada criada com trilha, aulas e pratica imersiva.');
-      setForm(createInitialForm(form.moduleMode === 'existing' ? form.moduleId : modulesSeed[0]?.id ?? ''));
+      setStatusMessage('Jornada criada com trilha, aulas e prática imersiva.');
+      setForm(
+        createInitialForm(
+          form.moduleMode === 'existing'
+            ? form.moduleId
+            : (modulesSeed[0]?.id ?? '')
+        )
+      );
     } catch (error) {
-      setErrorMessage(getApiErrorMessage(error, 'Nao foi possivel criar a jornada.'));
+      setErrorMessage(
+        getApiErrorMessage(error, 'Não foi possível criar a jornada.')
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -155,9 +176,12 @@ export default function StudyCatalogAdmin() {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="section-kicker">Curadoria</p>
-          <h2 className="mt-3 text-2xl font-semibold text-white">Nova jornada de estudo</h2>
+          <h2 className="mt-3 text-2xl font-semibold text-white">
+            Nova jornada de estudo
+          </h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-white/60">
-            Crie uma trilha completa com material preparatorio opcional e pratica imersiva.
+            Crie uma trilha completa com material preparatório opcional e
+            prática imersiva.
           </p>
         </div>
         <span className="chip chip-muted">Super admin</span>
@@ -181,7 +205,7 @@ export default function StudyCatalogAdmin() {
             <span className="analytics-activity-icon">
               <Layers3 className="h-5 w-5" />
             </span>
-            <h3 className="text-lg font-semibold text-white">Modulo</h3>
+            <h3 className="text-lg font-semibold text-white">Módulo</h3>
           </div>
 
           <div className="analytics-tabs">
@@ -208,11 +232,13 @@ export default function StudyCatalogAdmin() {
           </div>
 
           {form.moduleMode === 'existing' ? (
-            <Field label="Modulo">
+            <Field label="Módulo">
               <select
                 className="admin-select"
                 value={form.moduleId}
-                onChange={(event) => setForm({ ...form, moduleId: event.target.value })}
+                onChange={(event) =>
+                  setForm({ ...form, moduleId: event.target.value })
+                }
                 required
               >
                 {modulesSeed.map((module) => (
@@ -225,43 +251,37 @@ export default function StudyCatalogAdmin() {
           ) : (
             <>
               <div className="grid gap-4 md:grid-cols-2">
-                <Field label="Nome do modulo">
+                <Field label="Nome do módulo">
                   <input
                     className="admin-input"
                     value={form.moduleName}
-                    onBlur={() =>
-                      setForm((current) => ({
-                        ...current,
-                        moduleSlug: current.moduleSlug || slugify(current.moduleName),
-                      }))
+                    onChange={(event) =>
+                      setForm({ ...form, moduleName: event.target.value })
                     }
-                    onChange={(event) => setForm({ ...form, moduleName: event.target.value })}
+                    placeholder="Ex.: NR-12"
                     required={form.moduleMode === 'new'}
                   />
                 </Field>
-                <Field label="Slug do modulo">
-                  <input
-                    className="admin-input"
-                    value={form.moduleSlug}
-                    onChange={(event) => setForm({ ...form, moduleSlug: event.target.value })}
-                    required={form.moduleMode === 'new'}
-                  />
-                </Field>
+                <GeneratedIdentifier value={slugify(form.moduleName)} />
               </div>
-              <Field label="Resumo do modulo">
+              <Field label="Resumo do módulo">
                 <textarea
                   className="admin-input min-h-24"
                   value={form.moduleSummary}
-                  onChange={(event) => setForm({ ...form, moduleSummary: event.target.value })}
+                  onChange={(event) =>
+                    setForm({ ...form, moduleSummary: event.target.value })
+                  }
                 />
               </Field>
               <label className="flex items-center gap-3 text-sm text-white/75">
                 <input
                   type="checkbox"
                   checked={form.moduleIsActive}
-                  onChange={(event) => setForm({ ...form, moduleIsActive: event.target.checked })}
+                  onChange={(event) =>
+                    setForm({ ...form, moduleIsActive: event.target.checked })
+                  }
                 />
-                Modulo ativo
+                Módulo ativo
               </label>
             </>
           )}
@@ -276,32 +296,21 @@ export default function StudyCatalogAdmin() {
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Titulo da trilha">
+            <Field label="Título da trilha">
               <input
                 className="admin-input"
                 value={form.trackTitle}
-                onBlur={() =>
-                  setForm((current) => ({
-                    ...current,
-                    trackSlug: current.trackSlug || slugify(current.trackTitle),
-                  }))
+                onChange={(event) =>
+                  setForm({ ...form, trackTitle: event.target.value })
                 }
-                onChange={(event) => setForm({ ...form, trackTitle: event.target.value })}
                 required
               />
             </Field>
-            <Field label="Slug da trilha">
-              <input
-                className="admin-input"
-                value={form.trackSlug}
-                onChange={(event) => setForm({ ...form, trackSlug: event.target.value })}
-                required
-              />
-            </Field>
+            <GeneratedIdentifier value={slugify(form.trackTitle)} />
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Nivel">
+            <Field label="Nível">
               <select
                 className="admin-select"
                 value={form.trackLevel}
@@ -312,16 +321,19 @@ export default function StudyCatalogAdmin() {
                   })
                 }
               >
-                <option value="introductory">Introdutorio</option>
+                <option value="introductory">Introdutório</option>
                 <option value="operational">Operacional</option>
-                <option value="advanced">Avancado</option>
+                <option value="advanced">Avançado</option>
               </select>
             </Field>
-            <Field label="Imagem URL">
+            <Field label="Imagem de capa (link)">
               <input
                 className="admin-input"
+                placeholder="https://..."
                 value={form.trackImageUrl}
-                onChange={(event) => setForm({ ...form, trackImageUrl: event.target.value })}
+                onChange={(event) =>
+                  setForm({ ...form, trackImageUrl: event.target.value })
+                }
               />
             </Field>
           </div>
@@ -330,7 +342,9 @@ export default function StudyCatalogAdmin() {
             <textarea
               className="admin-input min-h-24"
               value={form.trackSummary}
-              onChange={(event) => setForm({ ...form, trackSummary: event.target.value })}
+              onChange={(event) =>
+                setForm({ ...form, trackSummary: event.target.value })
+              }
             />
           </Field>
         </div>
@@ -341,13 +355,17 @@ export default function StudyCatalogAdmin() {
               <span className="analytics-activity-icon">
                 <FileText className="h-5 w-5" />
               </span>
-              <h3 className="text-lg font-semibold text-white">Material preparatorio</h3>
+              <h3 className="text-lg font-semibold text-white">
+                Material preparatório
+              </h3>
             </div>
             <label className="flex items-center gap-3 text-sm text-white/75">
               <input
                 type="checkbox"
                 checked={form.includeMaterial}
-                onChange={(event) => setForm({ ...form, includeMaterial: event.target.checked })}
+                onChange={(event) =>
+                  setForm({ ...form, includeMaterial: event.target.checked })
+                }
               />
               Incluir material
             </label>
@@ -361,85 +379,82 @@ export default function StudyCatalogAdmin() {
                     className="admin-select"
                     value={form.materialKind}
                     onChange={(event) =>
-                      setForm({ ...form, materialKind: event.target.value as MaterialKind })
+                      setForm({
+                        ...form,
+                        materialKind: event.target.value as MaterialKind,
+                      })
                     }
                   >
                     <option value="pdf">PDF</option>
-                    <option value="video">Video</option>
+                    <option value="video">Vídeo</option>
                     <option value="image">Imagem</option>
                     <option value="link">Link</option>
                   </select>
                 </Field>
-                <Field label="Titulo do material">
+                <Field label="Título do material">
                   <input
                     className="admin-input"
                     value={form.materialTitle}
-                    onChange={(event) => setForm({ ...form, materialTitle: event.target.value })}
-                    required={form.includeMaterial}
-                  />
-                </Field>
-              </div>
-              <Field label="URL do material">
-                <input
-                  className="admin-input"
-                  value={form.materialUrl}
-                  onChange={(event) => setForm({ ...form, materialUrl: event.target.value })}
-                  required={form.includeMaterial}
-                />
-              </Field>
-              <div className="grid gap-4 md:grid-cols-2">
-                <Field label="Titulo da aula">
-                  <input
-                    className="admin-input"
-                    value={form.materialLessonTitle}
                     onChange={(event) =>
-                      setForm({ ...form, materialLessonTitle: event.target.value })
+                      setForm({ ...form, materialTitle: event.target.value })
                     }
                     required={form.includeMaterial}
                   />
                 </Field>
-                <Field label="Duracao da aula">
+              </div>
+              <Field label="Link do material">
+                <input
+                  className="admin-input"
+                  placeholder="https://..."
+                  value={form.materialUrl}
+                  onChange={(event) =>
+                    setForm({ ...form, materialUrl: event.target.value })
+                  }
+                  required={form.includeMaterial}
+                />
+              </Field>
+              <div className="grid gap-4 md:grid-cols-2">
+                <Field label="Duração de estudo (min)">
                   <input
                     className="admin-input"
                     type="number"
                     min={1}
                     value={form.materialDurationMinutes}
                     onChange={(event) =>
-                      setForm({ ...form, materialDurationMinutes: Number(event.target.value) })
+                      setForm({
+                        ...form,
+                        materialDurationMinutes: Number(event.target.value),
+                      })
                     }
                     required={form.includeMaterial}
                   />
                 </Field>
+                <Field label="Miniatura (link da imagem, opcional)">
+                  <input
+                    className="admin-input"
+                    placeholder="https://..."
+                    value={form.materialThumbnailUrl}
+                    onChange={(event) =>
+                      setForm({
+                        ...form,
+                        materialThumbnailUrl: event.target.value,
+                      })
+                    }
+                  />
+                </Field>
               </div>
-              <Field label="Descricao do material">
+              <Field label="Descrição">
                 <textarea
                   className="admin-input min-h-24"
                   value={form.materialDescription}
                   onChange={(event) =>
-                    setForm({ ...form, materialDescription: event.target.value })
+                    setForm({
+                      ...form,
+                      materialDescription: event.target.value,
+                    })
                   }
                 />
               </Field>
-              <div className="grid gap-4 md:grid-cols-2">
-                <Field label="Descricao da aula">
-                  <input
-                    className="admin-input"
-                    value={form.materialLessonDescription}
-                    onChange={(event) =>
-                      setForm({ ...form, materialLessonDescription: event.target.value })
-                    }
-                  />
-                </Field>
-                <Field label="Thumbnail URL">
-                  <input
-                    className="admin-input"
-                    value={form.materialThumbnailUrl}
-                    onChange={(event) =>
-                      setForm({ ...form, materialThumbnailUrl: event.target.value })
-                    }
-                  />
-                </Field>
-              </div>
               <label className="flex items-center gap-3 text-sm text-white/75">
                 <input
                   type="checkbox"
@@ -448,7 +463,7 @@ export default function StudyCatalogAdmin() {
                     setForm({ ...form, materialRequired: event.target.checked })
                   }
                 />
-                Aula obrigatoria
+                Aula obrigatória
               </label>
             </>
           ) : null}
@@ -459,136 +474,117 @@ export default function StudyCatalogAdmin() {
             <span className="analytics-activity-icon">
               <Play className="h-5 w-5" />
             </span>
-            <h3 className="text-lg font-semibold text-white">Pratica imersiva</h3>
+            <h3 className="text-lg font-semibold text-white">
+              Prática imersiva
+            </h3>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Titulo do treinamento">
+            <Field label="Título do treinamento">
               <input
                 className="admin-input"
                 value={form.trainingTitle}
-                onChange={(event) => setForm({ ...form, trainingTitle: event.target.value })}
+                onChange={(event) =>
+                  setForm({ ...form, trainingTitle: event.target.value })
+                }
                 required
               />
             </Field>
-            <Field label="Tipo de lancamento">
+            <Field label="Execução">
               <select
                 className="admin-select"
                 value={form.trainingLaunchType}
                 onChange={(event) =>
-                  setForm({ ...form, trainingLaunchType: event.target.value as LaunchType })
+                  setForm({
+                    ...form,
+                    trainingLaunchType: event.target.value as LaunchType,
+                  })
                 }
               >
-                <option value="web_url">Web / A-Frame</option>
-                <option value="meta_app">App Meta</option>
+                <option value="meta_app">Meta Quest (app Immersia)</option>
+                <option value="web_url">Navegador (web)</option>
               </select>
             </Field>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="URL de lancamento">
+            <Field
+              label={
+                form.trainingLaunchType === 'meta_app'
+                  ? 'Link do treinamento no app (fornecido pela equipe Immersia)'
+                  : 'Link do treinamento'
+              }
+            >
               <input
                 className="admin-input"
                 value={form.trainingLaunchUrl}
-                onChange={(event) => setForm({ ...form, trainingLaunchUrl: event.target.value })}
-                placeholder="https://... ou immersia-meta://..."
+                onChange={(event) =>
+                  setForm({ ...form, trainingLaunchUrl: event.target.value })
+                }
+                placeholder={
+                  form.trainingLaunchType === 'meta_app'
+                    ? 'Deixe em branco se ainda não houver'
+                    : 'https://...'
+                }
               />
             </Field>
-            <Field label="Minutos do treinamento">
+            <Field label="Duração (min)">
               <input
                 className="admin-input"
                 type="number"
                 min={1}
                 value={form.trainingMinutes}
                 onChange={(event) =>
-                  setForm({ ...form, trainingMinutes: Number(event.target.value) })
+                  setForm({
+                    ...form,
+                    trainingMinutes: Number(event.target.value),
+                  })
                 }
                 required
               />
             </Field>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Titulo da aula">
-              <input
-                className="admin-input"
-                value={form.trainingLessonTitle}
-                onChange={(event) =>
-                  setForm({ ...form, trainingLessonTitle: event.target.value })
-                }
-                required
-              />
-            </Field>
-            <Field label="Duracao da aula">
-              <input
-                className="admin-input"
-                type="number"
-                min={1}
-                value={form.trainingDurationMinutes}
-                onChange={(event) =>
-                  setForm({ ...form, trainingDurationMinutes: Number(event.target.value) })
-                }
-                required
-              />
-            </Field>
-          </div>
-
-          <Field label="Descricao do treinamento">
+          <Field label="Descrição">
             <textarea
               className="admin-input min-h-24"
               value={form.trainingDescription}
-              onChange={(event) => setForm({ ...form, trainingDescription: event.target.value })}
+              onChange={(event) =>
+                setForm({ ...form, trainingDescription: event.target.value })
+              }
             />
           </Field>
-
-          <div className="grid gap-4 md:grid-cols-3">
-            <Field label="Descricao da aula">
-              <input
-                className="admin-input"
-                value={form.trainingLessonDescription}
-                onChange={(event) =>
-                  setForm({ ...form, trainingLessonDescription: event.target.value })
-                }
-              />
-            </Field>
-            <Field label="Imagem URL">
-              <input
-                className="admin-input"
-                value={form.trainingImageUrl}
-                onChange={(event) => setForm({ ...form, trainingImageUrl: event.target.value })}
-              />
-            </Field>
-            <Field label="ID legado">
-              <input
-                className="admin-input"
-                value={form.trainingLegacyId}
-                onChange={(event) => setForm({ ...form, trainingLegacyId: event.target.value })}
-              />
-            </Field>
-          </div>
 
           <div className="flex flex-wrap gap-5">
             <label className="flex items-center gap-3 text-sm text-white/75">
               <input
                 type="checkbox"
                 checked={form.trainingEnabled}
-                onChange={(event) => setForm({ ...form, trainingEnabled: event.target.checked })}
+                onChange={(event) =>
+                  setForm({ ...form, trainingEnabled: event.target.checked })
+                }
               />
-              Disponivel para execucao
+              Liberado para os alunos (desmarque para exibir como "Em breve")
             </label>
             <label className="flex items-center gap-3 text-sm text-white/75">
               <input
                 type="checkbox"
                 checked={form.trainingRequired}
-                onChange={(event) => setForm({ ...form, trainingRequired: event.target.checked })}
+                onChange={(event) =>
+                  setForm({ ...form, trainingRequired: event.target.checked })
+                }
               />
-              Aula obrigatoria
+              Aula obrigatória
             </label>
           </div>
         </div>
 
         <div className="flex justify-end">
-          <button type="submit" className="primary-btn sm:w-auto sm:px-6" disabled={isSubmitting}>
+          <button
+            type="submit"
+            className="primary-btn sm:w-auto sm:px-6"
+            disabled={isSubmitting}
+          >
             <Plus className="h-4 w-4" />
             {isSubmitting ? 'Criando...' : 'Criar jornada'}
           </button>

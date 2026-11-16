@@ -30,11 +30,12 @@ import {
   usersSeed,
 } from '../data/mockPlatform';
 import {
+  assessGroupRiskFromAttempts,
   formatDateTime,
   getRiskLabel,
   getRiskPillClass,
-  type RiskLevel,
 } from '../lib/instructorAnalytics';
+import { pluralize } from '../lib/pluralize';
 import {
   getAvailableTracksForOrganization,
   getGroupTrackProgress,
@@ -54,24 +55,6 @@ const MEMBERS_PAGE_SIZE = 6;
 function getAverage(values: number[]) {
   if (!values.length) return 0;
   return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
-}
-
-function getGroupRisk(
-  averageScore: number,
-  participationRate: number,
-  learnersInSupport: number,
-  trackCompletionRate: number
-): RiskLevel {
-  if (averageScore < 70 || participationRate < 50 || trackCompletionRate < 50) return 'critical';
-  if (
-    averageScore < 80 ||
-    participationRate < 80 ||
-    trackCompletionRate < 80 ||
-    learnersInSupport > 0
-  ) {
-    return 'attention';
-  }
-  return 'healthy';
 }
 
 function buildTrendPoints(groupId: string) {
@@ -99,7 +82,7 @@ function buildTrendPoints(groupId: string) {
     return {
       label: new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(start),
       value: getAverage(dayAttempts.map((attempt) => attempt.score)),
-      note: `${dayAttempts.length} execuções`,
+      note: pluralize(dayAttempts.length, 'execução', 'execuções'),
     };
   });
 }
@@ -195,11 +178,6 @@ export default function GroupDetails() {
     ? Math.round((members.filter((learner) => attemptedMemberIds.has(learner.id)).length / members.length) * 100)
     : 0;
   const averageScore = getAverage(groupAttempts.map((attempt) => attempt.score));
-  const learnersInSupport = members.filter((learner) => {
-    const attempts = groupAttempts.filter((attempt) => attempt.learnerId === learner.id);
-    if (!attempts.length) return false;
-    return getAverage(attempts.map((attempt) => attempt.score)) < 80;
-  }).length;
   const trackCompletionRate = assignedTracks.length
     ? getAverage(assignedTracks.map((item) => getGroupTrackProgress(group.id, item.track.id, progressRecords).percent))
     : 0;
@@ -219,7 +197,14 @@ export default function GroupDetails() {
     (total, row) => total + row.progress.pendingLearners,
     0
   );
-  const risk = getGroupRisk(averageScore, participationRate, learnersInSupport, trackCompletionRate);
+  // Mesma regra da listagem de turmas; turma arquivada não recebe risco.
+  const riskAssessment =
+    group.status === 'active'
+      ? assessGroupRiskFromAttempts(
+          members.map((learner) => learner.id),
+          groupAttempts
+        )
+      : null;
 
   const memberRows = members.map((learner) => {
     const membership = studentGroupMembershipsSeed.find(
@@ -258,7 +243,7 @@ export default function GroupDetails() {
     ...availableLearners.map((learner) => ({ value: learner.id, label: learner.name })),
   ];
   const trackOptions = [
-    { value: '', label: availableTracks.length ? 'Selecionar trilha' : 'Sem trilhas disponiveis' },
+    { value: '', label: availableTracks.length ? 'Selecionar trilha' : 'Sem trilhas disponíveis' },
     ...availableTracks.map((item) => ({ value: item.track.id, label: item.track.title })),
   ];
   const learnerToAdd = availableLearners.find((learner) => learner.id === selectedLearnerId) ?? null;
@@ -368,7 +353,13 @@ export default function GroupDetails() {
           <div className="readonly-field">
             <span className="readonly-field-label">Risco da turma</span>
             <strong className="readonly-field-value">
-              <span className={getRiskPillClass(risk)}>{getRiskLabel(risk)}</span>
+              {riskAssessment ? (
+                <span className={getRiskPillClass(riskAssessment.risk)} title={riskAssessment.reason}>
+                  {getRiskLabel(riskAssessment.risk)}
+                </span>
+              ) : (
+                <span className="status-pill status-pill-muted">Turma arquivada</span>
+              )}
             </strong>
           </div>
         </div>
@@ -391,15 +382,15 @@ export default function GroupDetails() {
         />
         <StatCard
           label="Média"
-          value={`${averageScore}%`}
-          caption="Score médio."
+          value={groupAttempts.length ? `${averageScore}%` : '—'}
+          caption="Nota média."
           tooltip="Média das notas registradas nas execuções desta turma."
           icon={BarChart3}
         />
         <StatCard
           label="Progresso"
           value={`${trackCompletionRate}%`}
-          caption={`${assignedTracks.length} trilhas`}
+          caption={pluralize(assignedTracks.length, 'trilha', 'trilhas')}
           tooltip="Conclusão média das trilhas encaminhadas para a turma."
           icon={BookOpenCheck}
         />
@@ -504,7 +495,7 @@ export default function GroupDetails() {
                   </td>
                   <td>{formatDateTime(row.membership?.startedAt ?? null)}</td>
                   <td>{row.attempts.length}</td>
-                  <td>{row.average ? `${row.average}%` : '-'}</td>
+                  <td>{row.attempts.length ? `${row.average}%` : '—'}</td>
                   <td>{row.criticalErrors}</td>
                   <td>{formatDateTime(row.lastAttempt?.completedAt ?? null)}</td>
                   <td>

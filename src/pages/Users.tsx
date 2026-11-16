@@ -439,7 +439,7 @@ export default function Users() {
               value={form.name}
               onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
               className="admin-input"
-              placeholder="Ex: Usuário 05"
+              placeholder="Ex.: Maria Silva"
             />
           </label>
 

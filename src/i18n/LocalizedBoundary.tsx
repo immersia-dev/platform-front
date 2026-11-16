@@ -2,7 +2,9 @@ import { useEffect, useRef, type PropsWithChildren } from 'react';
 
 import { useLocale } from './useLocale';
 
-const textNodeSources = new WeakMap<Text, string>();
+// source text and the translation last written, per node: when React changes the text in place
+// (data that finished loading, for example), the new text becomes the source instead of being reverted
+const textNodeSources = new WeakMap<Text, { source: string; output: string }>();
 const translatableAttributes = ['aria-label', 'placeholder', 'title', 'alt'] as const;
 
 function shouldSkipTextNode(node: Text) {
@@ -27,11 +29,13 @@ function translateTextNodes(root: HTMLElement, translate: (source: string) => st
   }
 
   nodes.forEach((node) => {
-    const source = textNodeSources.get(node) ?? node.nodeValue ?? '';
-    textNodeSources.set(node, source);
+    const current = node.nodeValue ?? '';
+    const known = textNodeSources.get(node);
+    const source = known && current === known.output ? known.source : current;
 
     const translated = translate(source);
-    if (node.nodeValue !== translated) {
+    textNodeSources.set(node, { source, output: translated });
+    if (current !== translated) {
       node.nodeValue = translated;
     }
   });
@@ -48,10 +52,14 @@ function translateElementAttributes(root: HTMLElement, translate: (source: strin
       if (!currentValue?.trim()) return;
 
       const sourceAttribute = `data-i18n-source-${attribute}`;
-      const source = element.getAttribute(sourceAttribute) ?? currentValue;
-      element.setAttribute(sourceAttribute, source);
+      const outputAttribute = `data-i18n-output-${attribute}`;
+      const knownSource = element.getAttribute(sourceAttribute);
+      const source =
+        knownSource !== null && currentValue === element.getAttribute(outputAttribute) ? knownSource : currentValue;
 
       const translated = translate(source);
+      element.setAttribute(sourceAttribute, source);
+      element.setAttribute(outputAttribute, translated);
       if (currentValue !== translated) {
         element.setAttribute(attribute, translated);
       }

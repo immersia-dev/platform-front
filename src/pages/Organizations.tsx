@@ -17,6 +17,8 @@ import PageHeader from '../components/PageHeader';
 import StatCard from '../components/StatCard';
 import TablePagination from '../components/TablePagination';
 import { useAuth } from '../auth/useAuth';
+import { pluralize } from '../lib/pluralize';
+import { getCatalogSummary } from '../lib/studyPlatform';
 import { usePlatformData } from '../data/PlatformDataContext';
 import {
   modulesSeed,
@@ -48,7 +50,7 @@ const initialOrganizationForm: OrganizationFormState = {
 
 function getContractStatusLabel(status: ContractStatus) {
   if (status === 'active') return 'Ativa';
-  if (status === 'onboarding') return 'Onboarding';
+  if (status === 'onboarding') return 'Em implantação';
   return 'Desativada';
 }
 
@@ -116,7 +118,7 @@ export default function Organizations() {
   const statusOptions = [
     { value: 'all', label: 'Todos os status' },
     { value: 'active', label: 'Ativas' },
-    { value: 'onboarding', label: 'Onboarding' },
+    { value: 'onboarding', label: 'Em implantação' },
     { value: 'inactive', label: 'Desativadas' },
   ];
 
@@ -199,14 +201,14 @@ export default function Organizations() {
         <StatCard
           label="Organizações"
           value={`${records.length}`}
-          caption={`${activeOrganizations.length} ativas`}
+          caption={pluralize(activeOrganizations.length, 'ativa', 'ativas')}
           tooltip="Total de organizações cadastradas na plataforma."
           icon={Building2}
         />
         <StatCard
-          label="Onboarding"
+          label="Em implantação"
           value={`${onboardingOrganizations.length}`}
-          caption="Em implantação."
+          caption={pluralize(inactiveOrganizations.length, 'desativada', 'desativadas')}
           tooltip="Organizações em fase de cadastro, configuração inicial ou liberação gradual."
           icon={ShieldCheck}
         />
@@ -219,8 +221,8 @@ export default function Organizations() {
         />
         <StatCard
           label="Módulos"
-          value={`${modulesSeed.length}`}
-          caption={`${inactiveOrganizations.length} organização desativada`}
+          value={`${getCatalogSummary().modules}`}
+          caption={`${pluralize(getCatalogSummary().activeModules, 'ativo', 'ativos')} · ${getCatalogSummary().comingSoonModules} em breve`}
           tooltip="Catálogo de módulos que pode ser liberado por organização."
           icon={BookOpenCheck}
         />
@@ -391,7 +393,7 @@ export default function Organizations() {
               value={organizationForm.status}
               options={[
                 { value: 'active', label: 'Ativa' },
-                { value: 'onboarding', label: 'Onboarding' },
+                { value: 'onboarding', label: 'Em implantação' },
                 { value: 'inactive', label: 'Desativada' },
               ]}
               ariaLabel="Selecionar status da organização"
