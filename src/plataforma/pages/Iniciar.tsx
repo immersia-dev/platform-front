@@ -1083,10 +1083,6 @@ export default function Iniciar() {
               ) : null
             }
           >
-            <p className="mb-3 text-xs leading-relaxed text-white/50">
-              O nome do óculos aparece no painel do Quest. O aluno confirma no
-              próprio óculos antes de começar.
-            </p>
             <QuestPicker
               quests={questList}
               loading={quests.loading}
@@ -1096,15 +1092,13 @@ export default function Iniciar() {
             />
             {questList.length && !freeQuests.length ? (
               <p className="mt-3 text-xs text-amber-100/80">
-                Nenhum Quest livre agora. A lista se atualiza sozinha: quando
-                um terminar ou voltar a ter conexão, ele fica disponível aqui.
+                Nenhum Quest livre agora. A lista se atualiza sozinha.
               </p>
             ) : null}
             {mode === 'practice' ? (
               <div className="mt-3">
                 <Notice tone="warn">
-                  Rodada de teste: o Quest avisa que é um teste e o resultado
-                  não conta para ninguém.
+                  Rodada de teste: o resultado não conta.
                 </Notice>
               </div>
             ) : null}
@@ -1172,7 +1166,7 @@ export default function Iniciar() {
                 className={`text-center text-xs ${missing.length ? 'text-amber-200/90' : 'text-white/45'}`}
                 aria-live="polite"
               >
-                {missingText || 'Tudo pronto: o aluno confirma no óculos.'}
+                {missingText || 'Tudo pronto.'}
               </p>
             </div>
           </div>
